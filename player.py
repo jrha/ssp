@@ -7,10 +7,11 @@ pygst.require("0.10")
 import gst
 import pango
 from random import randint
+from datetime import datetime
 
 from library import *
 
-SELECT_LIMIT = 128
+SELECT_LIMIT = 4096
 
 class Player:
 
@@ -60,27 +61,27 @@ class Player:
 
 
     def play(self):
-        tracks = self.library.query(sspTrack).order_by(sspTrack.playcount).limit(SELECT_LIMIT).all()
-        self.track = tracks[randint(0, SELECT_LIMIT)]
-        self.filepath = track.filepath # shortcut
-        print("Playing %s" % self.filepath)
+        tracks = self.library.query(sspTrack).order_by(sspTrack.playcount).order_by(sspTrack.skipcount).order_by(sspTrack.lastplayed).limit(SELECT_LIMIT).all()
+        self.track = tracks[randint(0, len(tracks))]
+        self.filepath = self.track.filepath # shortcut
 
         if os.path.isfile(self.filepath):
             self.player.set_property("uri", "file://" + self.filepath)
             self.player.set_state(gst.STATE_PLAYING)
-            #print("PLAYING: %s" % filepath)
+            print("Playing %s" % self.filepath)
 
 
     def skip(self):
         self.stop()
-        print("Skipped %s" % self.filepath)
         # Increment skip count
-        self.track.skip
+        self.track.skipcount += 1
+        self.library.commit()
+        print("Skipped %s" % self.filepath)
         self.play()
 
 
     def stop(self):
-            self.player.set_state(gst.STATE_NULL)
+        self.player.set_state(gst.STATE_NULL)
 
 
     def on_message(self, bus, message):
@@ -88,6 +89,9 @@ class Player:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             # Increment play count, set last played
+            self.track.playcount += 1
+            self.track.lastplayed = datetime.now()
+            self.library.commit()
             self.stop()
             print("Completed %s" % self.filepath)
             self.play()
