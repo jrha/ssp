@@ -30,7 +30,7 @@ class Player:
         self.window.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#000"))
 
         self.label = gtk.Label()
-        self.label.modify_font(pango.FontDescription("Sans 48"))
+        self.label.modify_font(pango.FontDescription("Sans 32"))
         self.label.set_alignment(0.5, 0.5)
         self.label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#eeeeec"))
 
