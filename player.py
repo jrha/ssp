@@ -6,12 +6,9 @@ import pygst
 pygst.require("0.10")
 import gst
 import pango
-from random import randint
 from datetime import datetime
 
 from library import *
-
-SELECT_LIMIT = 4096
 
 class Player:
 
@@ -61,8 +58,7 @@ class Player:
 
 
     def play(self):
-        tracks = self.library.query(sspTrack).order_by(sspTrack.playcount).order_by(sspTrack.skipcount).order_by(sspTrack.lastplayed).limit(SELECT_LIMIT).all()
-        self.track = tracks[randint(0, len(tracks))]
+        self.track = self.library.query(sspTrack).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()
         self.filepath = self.track.filepath # shortcut
 
         if os.path.isfile(self.filepath):
