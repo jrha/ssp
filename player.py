@@ -33,7 +33,6 @@ class Player:
 
         self.window.add(self.label)
 
-        self.window.fullscreen()
         self.window.show_all()
 
         self.player = gst.element_factory_make("playbin2", "player")
