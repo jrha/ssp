@@ -63,7 +63,6 @@ class Player:
         if os.path.isfile(self.filepath):
             self.player.set_property("uri", "file://" + self.filepath)
             self.player.set_state(gst.STATE_PLAYING)
-            print("Playing %s" % self.filepath)
 
 
     def skip(self):
@@ -71,7 +70,6 @@ class Player:
         # Increment skip count
         self.track.skipcount += 1
         self.library.commit()
-        print("Skipped %s" % self.filepath)
         self.play()
 
 
@@ -88,7 +86,6 @@ class Player:
             self.track.lastplayed = datetime.now()
             self.library.commit()
             self.stop()
-            print("Completed %s" % self.filepath)
             self.play()
 
         elif t == gst.MESSAGE_ERROR: # Eeek!
