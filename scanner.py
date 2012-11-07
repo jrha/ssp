@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf8
 
 import sys, os
 import gtk
@@ -9,10 +10,12 @@ import pango
 from datetime import datetime
 import mimetypes
 import json
+import urllib
 
 mimetypes.init()
 
-TOP = u"/home/media/audio/ReTagged/Eric Clapton/1976 - No Reason to Cry/"
+TOP = u"/home/media/audio/ReTagged/"
+OUTFILE = u"scanresults.json"
 
 class Scanner:
 
@@ -22,6 +25,7 @@ class Scanner:
         self.player = gst.element_factory_make("playbin2", "player")
         fakesink = gst.element_factory_make("fakesink", "fakesink")
         self.player.set_property("video-sink", fakesink)
+        self.player.set_property("audio-sink", fakesink)
 
         bus = self.player.get_bus()
         bus.add_signal_watch()
@@ -31,11 +35,16 @@ class Scanner:
         self.fileinfo = {}
     
 
-    def play(self):
+    def scan(self):
         if os.path.isfile(self.filepath):
-            self.player.set_property("uri", "file://" + self.filepath)
-            self.player.set_state(gst.STATE_PLAYING)
-            print("Playing %s" % self.filepath)
+            try:
+                self.player.set_property("uri", "file://" + urllib.quote(self.filepath))
+                self.player.set_state(gst.STATE_PLAYING)
+                print("Scanning %s" % self.filepath)
+            except KeyError:
+                print("UNICODE FILENAME %s" % self.filepath)
+                self.next()
+                
 
 
     def stop(self):
@@ -46,9 +55,12 @@ class Scanner:
         self.stop()
         if len(self.filelist) > 0:
             self.filepath = self.filelist.pop()
-            self.play()
+            self.scan()
         else:
-            print(json.dumps(self.fileinfo))
+            f = open(OUTFILE, "w")
+            json.dump(self.fileinfo, f, indent=2)
+            f.close()
+            print("Wrote %s" % OUTFILE)
             gtk.main_quit()
 
 
@@ -57,22 +69,24 @@ class Scanner:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             self.stop()
-            print("Completed %s" % self.filepath)
-            self.play()
+            print("Hit end of %s" % self.filepath)
+            self.next()
 
         elif t == gst.MESSAGE_ERROR: # Eeek!
             self.stop()
             err, debug = message.parse_error()
-            print "Error: %s" % err, debug
+            print("Error: %s" % err, debug)
 
         elif t == gst.MESSAGE_TAG:
                 taglist = message.parse_tag()
-                self.trackinfo={}
-                for k in taglist.keys():
-                    self.trackinfo[k] = taglist[k]
+                keys = taglist.keys()
+                if "musicbrainz-trackid" in keys and "musicbrainz-albumid" in keys:
+                    self.trackinfo = "%s:%s" % (taglist["musicbrainz-trackid"], taglist["musicbrainz-albumid"])
+                    if self.trackinfo not in self.fileinfo:
+                        self.fileinfo[self.trackinfo] = []
+                    self.fileinfo[self.trackinfo].append(self.filepath)
+                    self.next()
 
-                self.fileinfo[self.filepath] = self.trackinfo
-                self.next()
 
 
 if __name__ == "__main__":
