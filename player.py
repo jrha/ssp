@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys, os
 import pygtk, gtk, gobject
@@ -18,7 +19,7 @@ class Player:
         self.library = connect()
 
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.window.set_title("Audio-Player")
+        self.window.set_title("SSP")
 
         self.window.connect("destroy", gtk.main_quit, "WM destroy")
         self.window.connect("delete_event", self.key_press)
@@ -106,6 +107,7 @@ class Player:
                             self.trackinfo += ' (%s)' %  taglist["date"].year
 
                     self.label.set_label(self.trackinfo)
+                    self.window.set_title("SSP : %s" % (self.trackinfo.replace("\n", " - ")))
 
 
 
