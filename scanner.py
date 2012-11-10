@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding=utf8
+# -*- coding: utf-8 -*-
 
 import sys, os
 import gtk
@@ -12,15 +12,49 @@ import mimetypes
 import json
 import urllib
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
+
+from utfurl import fixurl
+
 mimetypes.init()
 
 TOP = u"/home/media/audio/ReTagged/"
-OUTFILE = u"scanresults.json"
+
+Base = declarative_base()
+
+class scannerTrack(Base):
+    __tablename__ = 'tracks'
+    filepath = Column(String(512), primary_key=True)
+    aid = Column(String(48))
+    tid = Column(String(48))
+
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.aid = ""
+        self.tid = ""
+  
+    def __repr__(self):
+        return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
+
+
+def connect():
+    engine = create_engine('sqlite:///scanner.db', echo=False)
+
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+
+    return(Session())
+
 
 class Scanner:
 
     def __init__(self, filelist):
-        self.trackinfo = ""
+        self.track = None
 
         self.player = gst.element_factory_make("playbin2", "player")
         fakesink = gst.element_factory_make("fakesink", "fakesink")
@@ -32,35 +66,32 @@ class Scanner:
         bus.connect("message", self.on_message)
         
         self.filelist = filelist
-        self.fileinfo = {}
+
+        self.session = connect()
     
 
     def scan(self):
         if os.path.isfile(self.filepath):
-            try:
-                self.player.set_property("uri", "file://" + urllib.quote(self.filepath))
-                self.player.set_state(gst.STATE_PLAYING)
-                print("Scanning %s" % self.filepath)
-            except KeyError:
-                print("UNICODE FILENAME %s" % self.filepath)
-                self.next()
-                
+            self.player.set_property("uri", "file://" + fixurl(self.filepath.replace("#","%23")))
+            self.player.set_state(gst.STATE_PLAYING)
+            print("Scanning %s" % self.filepath)
 
 
     def stop(self):
-        self.player.set_state(gst.STATE_NULL)
+        if self.player.get_state() != gst.STATE_NULL:
+            self.player.set_state(gst.STATE_NULL)
+            if self.track:
+                self.session.add(self.track)
+            self.session.commit()
 
 
     def next(self):
         self.stop()
         if len(self.filelist) > 0:
             self.filepath = self.filelist.pop()
+            self.track = scannerTrack(self.filepath)
             self.scan()
         else:
-            f = open(OUTFILE, "w")
-            json.dump(self.fileinfo, f, indent=2)
-            f.close()
-            print("Wrote %s" % OUTFILE)
             gtk.main_quit()
 
 
@@ -81,10 +112,8 @@ class Scanner:
                 taglist = message.parse_tag()
                 keys = taglist.keys()
                 if "musicbrainz-trackid" in keys and "musicbrainz-albumid" in keys:
-                    self.trackinfo = "%s:%s" % (taglist["musicbrainz-trackid"], taglist["musicbrainz-albumid"])
-                    if self.trackinfo not in self.fileinfo:
-                        self.fileinfo[self.trackinfo] = []
-                    self.fileinfo[self.trackinfo].append(self.filepath)
+                    self.track.tid = taglist["musicbrainz-trackid"]
+                    self.track.aid = taglist["musicbrainz-albumid"]
                     self.next()
 
 
