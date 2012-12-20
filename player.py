@@ -31,6 +31,7 @@ class Player:
         self.label.modify_font(pango.FontDescription("Sans 32"))
         self.label.set_alignment(0.5, 0.5)
         self.label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#eeeeec"))
+        self.label.set_line_wrap(True)
 
         self.window.add(self.label)
 
