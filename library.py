@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
+from os.path import dirname
+from sys import argv
 
 Base = declarative_base()
 
@@ -27,7 +29,8 @@ class sspTrack(Base):
 
 
 def connect():
-    engine = create_engine('sqlite:///library.db', echo=False)
+    base_path = dirname(argv[0])
+    engine = create_engine('sqlite:///%s/library.db' % base_path, echo=False)
 
     Base.metadata.create_all(engine)
 
