@@ -32,5 +32,5 @@ Getting Started
 
 Passive Mode
 ------------
-If for some reason you don't want the player to update statistics in the library of delete missing tracks,
+If for some reason you don't want the player to update statistics in the library or delete missing tracks,
 run with `--passive`, this is probably only useful if you are testing something.
