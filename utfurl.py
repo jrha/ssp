@@ -1,5 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # -*- coding: utf8 -*-
+#
+# This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+# http://creativecommons.org/licenses/by-sa/3.0/
+#
+# Based on code from http://stackoverflow.com/questions/804336
+#
 
 import os, sys
 import urlparse, urllib
@@ -36,12 +42,3 @@ def fixurl(url):
         # put it back together
         netloc = ''.join((user,colon1,pass_,at,host,colon2,port))
         return urlparse.urlunsplit((scheme,netloc,path,query,fragment))
-
-# examples
-# print fixurl('http://\xe2\x9e\xa1.ws/\xe2\x99\xa5')
-# print fixurl('http://\xe2\x9e\xa1.ws/\xe2\x99\xa5/%2F')
-# print fixurl(u'http://Åsa:abc123@➡.ws:81/admin')
-# print fixurl(u'http://➡.ws/admin')
-# print fixurl(u'http://www.somewebsite.com/моето-име-е-ърл')
-# print fixurl(u'http://ecorpbg.com/bg/content/референции')
-# print fixurl(u'http://ecorpbg.com/bg/content/партньори')
