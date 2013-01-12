@@ -12,8 +12,8 @@ Features
 
 Controls
 --------
-* ESC - Exit
-* Space - Skip current track
+* __ESC__ - Exit
+* __Space__ - Skip current track
 
 
 Requirements
