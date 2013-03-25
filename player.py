@@ -34,6 +34,7 @@ pygst.require("0.10")
 import pango
 from gst import element_factory_make, STATE_PLAYING, STATE_NULL, MESSAGE_EOS, MESSAGE_ERROR, MESSAGE_TAG
 from datetime import datetime
+import logging
 
 from library import *
 
@@ -55,6 +56,10 @@ class TrackInfo:
 class Player:
 
     def __init__(self, passive=False):
+        self.logger = logging.basicConfig(filename='ssp.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp")
+        self.logger = logging.getLogger("ssp")
+        self.logger.info("Startup, passive mode %s" % passive)
+
         self.passive = passive
         self.trackinfo = TrackInfo()
         self.library = connect()
@@ -108,10 +113,10 @@ class Player:
             self.player.set_property("uri", "file://" + self.track.filepath)
             self.player.set_state(STATE_PLAYING)
         else:
-            print "Oops, \"%s\" doesn't seem to exist anymore" % self.track.filepath
+            self.logger.info("Oops, \"%s\" doesn't seem to exist anymore" % self.track.filepath)
             self.stop()
             if not self.passive:
-                print "Removing \"%s\" from the library." % self.track.filepath
+                self.logger.warning("Removing \"%s\" from the library." % self.track.filepath)
                 self.library.delete(self.track)
                 self.library.commit()
             self.play()
@@ -145,7 +150,7 @@ class Player:
         elif t == MESSAGE_ERROR: # Eeek!
             self.stop()
             err, debug = message.parse_error()
-            print "Error: %s" % err, debug
+            self.logger.error("MESSAGE_ERROR: %s" % err, debug)
 
         elif t == MESSAGE_TAG:
                 taglist = message.parse_tag()
