@@ -107,6 +107,7 @@ class Player:
 
     def play(self):
         self.track = self.library.query(sspTrack).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()
+        self.stat = self.library.query(sspStat).filter("hour = %s" % datetime.now().hour).first()
         self.trackinfo = TrackInfo()
 
         if os.path.isfile(self.track.filepath):
@@ -127,6 +128,7 @@ class Player:
         if not self.passive:
             # Increment skip count
             self.track.skipcount += 1
+            self.stat.skipcount += 1
             self.library.commit()
         self.play()
 
@@ -143,6 +145,7 @@ class Player:
             if not self.passive:
                 # Increment play count, set last played
                 self.track.playcount += 1
+                self.stat.playcount += 1
                 self.track.lastplayed = datetime.now()
                 self.library.commit()
             self.play()
