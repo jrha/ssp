@@ -46,6 +46,21 @@ class sspTrack(Base):
     def __repr__(self):
         return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
 
+class sspStat(Base):
+    __tablename__ = 'stats'
+    hour = Column(Integer(24), primary_key=True)
+    playcount = Column(Integer())
+    skipcount = Column(Integer())
+
+    def __init__(self, hour):
+        if hour > 0 and hour < 24:
+            self.hour = hour
+            self.playcount = 0
+            self.skipcount = 0
+
+    def __repr__(self):
+        return "<Stat (Hour %s - %s plays, %s skips)>" % (self.hour, self. playcount, self.skipcount)
+
 
 def connect():
     base_path = dirname(argv[0])
