@@ -32,5 +32,8 @@ skips = [-s.skipcount for s in stats]
 import matplotlib.pyplot as plt
 plt.bar(hours, plays, color="#3465a4")
 plt.bar(hours, skips, color="#f57900")
-plt.ylabel('some numbers')
+plt.xlim([0, 24])
+plt.xticks(hours)
+plt.xlabel('Hour of day')
+plt.ylabel('Skips vs Plays')
 plt.show()
