@@ -35,6 +35,7 @@ import pango
 from gst import element_factory_make, STATE_PLAYING, STATE_NULL, MESSAGE_EOS, MESSAGE_ERROR, MESSAGE_TAG
 from datetime import datetime
 import logging
+import pynotify
 
 from library import *
 
@@ -91,6 +92,8 @@ class Player:
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
+
+        pynotify.init("SSP")
 
 
     def key_press(self, widget, event, data=None):
@@ -169,6 +172,11 @@ class Player:
 
                     self.label.set_label(self.trackinfo.tolabel())
                     self.window.set_title(self.trackinfo.totitle())
+                    self.notify(self.trackinfo.tolabel())
+
+
+    def notify(self, message):
+        pynotify.Notification("SSP", message, "media-skip-forward").show()
 
 
 if __name__ == "__main__":
