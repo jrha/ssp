@@ -22,7 +22,9 @@
 import os
 import mimetypes
 
+
 from library import *
+from sqlalchemy.exc import IntegrityError
 
 mimetypes.init()
 
@@ -33,17 +35,22 @@ args = parser.parse_args()
 del parser
 
 session = connect()
+session.text_factory = str
 
 if args.path:
     for root, dirs, files in os.walk(args.path):
         for f in files:
-            filepath = "%s/%s" % (root, f)
+            filepath = "%s/%s" % (root.decode('utf8'), f.decode('utf8'))
             mimetype = mimetypes.guess_type(filepath)
 
             if type(mimetype) is tuple:
                 mimetype = mimetype[0]
 
             if mimetype and "audio" in mimetype:
-                session.add(sspTrack(filepath))
-
-session.commit()
+                try:
+                    session.add(sspTrack(filepath))
+                    session.commit()
+                    print "ADDED: %s" % (filepath.encode('utf8'))
+                except IntegrityError:
+                    print "EXISTS: %s" % (filepath.encode('utf8'))
+                    session.rollback()
