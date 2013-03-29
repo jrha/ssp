@@ -56,7 +56,7 @@ class TrackInfo:
 class Player:
 
     def __init__(self, passive=False):
-        self.logger = logging.basicConfig(filename='ssp.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp")
+        self.logger = logging.basicConfig(filename='%s/ssp.log' % os.path.dirname(sys.argv[0]), level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp")
         self.logger = logging.getLogger("ssp")
         self.logger.info("Startup, passive mode %s" % passive)
 
