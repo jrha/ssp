@@ -53,6 +53,9 @@ class TrackInfo:
     def totitle(self):
         return "SSP : %s - %s - %s (%s)" % (self.title, self.artist, self.album, self.year)
 
+    def tonotification(self):
+        return (self.title, ("%s\n%s (%s)" % (self.artist, self.album, self.year)))
+
 
 class Player:
 
@@ -94,6 +97,7 @@ class Player:
         bus.connect("message", self.on_message)
 
         pynotify.init("SSP")
+        self.notification = pynotify.Notification("SSP")
 
 
     def key_press(self, widget, event, data=None):
@@ -172,11 +176,12 @@ class Player:
 
                     self.label.set_label(self.trackinfo.tolabel())
                     self.window.set_title(self.trackinfo.totitle())
-                    self.notify(self.trackinfo.tolabel())
+                    self.notify(self.trackinfo.tonotification())
 
 
     def notify(self, message):
-        pynotify.Notification("SSP", message, "media-skip-forward").show()
+        self.notification.update(message[0], message[1], "media-skip-forward")
+        self.notification.show()
 
 
 if __name__ == "__main__":
