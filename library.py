@@ -24,6 +24,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql.expression import func
 from datetime import datetime
 from os.path import dirname
 from sys import argv
