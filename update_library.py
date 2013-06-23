@@ -31,6 +31,7 @@ mimetypes.init()
 import argparse
 parser = argparse.ArgumentParser(description='Super Simple Player - Library Updater')
 parser.add_argument('path', help="Path of the root of your music collection")
+parser.add_argument('--verbose', action="store_true", help="Print track info, even when a track already exists in the library")
 args = parser.parse_args()
 del parser
 
@@ -52,5 +53,6 @@ if args.path:
                     session.commit()
                     print "ADDED: %s" % (filepath.encode('utf8'))
                 except IntegrityError:
-                    print "EXISTS: %s" % (filepath.encode('utf8'))
+                    if args.verbose:
+                        print "EXISTS: %s" % (filepath.encode('utf8'))
                     session.rollback()
