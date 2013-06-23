@@ -2,6 +2,7 @@ SSP
 ===
 
 A wear levelling player for your music collection.
+Like a radio station that plays all of your music with a no repeat guarantee!
 
 Features
 --------
