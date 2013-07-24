@@ -79,6 +79,10 @@ class Scanner:
             self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
             self.player.set_state(gst.STATE_PLAYING)
             self.logger.debug(u"Scanning %s" % self.track.filepath)
+        else:
+            self.stop()
+            self.logger.error(u"Unable to find %s on disk" % (self.track.filepath))
+            self.next()
 
 
     def stop(self):
