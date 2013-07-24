@@ -31,21 +31,28 @@ from sys import argv
 
 Base = declarative_base()
 
+SCHEMA_VERSION = '2'
+
 class sspTrack(Base):
     __tablename__ = 'tracks'
     filepath = Column(String(512), primary_key=True)
     playcount = Column(Integer())
     skipcount = Column(Integer())
     lastplayed = Column(DateTime())
+    albumid = Column(String(48))
+    trackid = Column(String(48))
 
     def __init__(self, filepath):
         self.filepath = filepath
         self.playcount = 0
         self.skipcount = 0
         self.lastplayed = None
+        albumid = ""
+        trackid = ""
 
     def __repr__(self):
         return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
+
 
 class sspStat(Base):
     __tablename__ = 'stats'
@@ -65,7 +72,7 @@ class sspStat(Base):
 
 def connect():
     base_path = dirname(argv[0])
-    engine = create_engine('sqlite:///%s/library.db' % base_path, echo=False)
+    engine = create_engine('sqlite:///%s/library-v%s.db' % (base_path, SCHEMA_VERSION), echo=False)
 
     Base.metadata.create_all(engine)
 
