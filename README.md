@@ -40,3 +40,4 @@ Passive Mode
 ------------
 If for some reason you don't want the player to update statistics in the library,
 run with `--passive`, this is probably only useful if you are testing something.
+Album Mode will play one track forever in passive mode as it relies on track statistics.
