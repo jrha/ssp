@@ -9,7 +9,6 @@ Features
 * Only two controls.
 * Tracks are shuffled to equalise play count.
 * Skipped tracks are demoted in play order.
-* Missing tracks are automatically removed from the library.
 
 Controls
 --------
