@@ -135,16 +135,15 @@ class Player:
             self.logger.debug("Selecting track based on album mode algorithm")
             min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
             min_skip_count = self.library.query(func.min(sspTrack.skipcount)).first()[0]
-            min_count = min(min_play_count, min_skip_count)
             self.logger.debug("min_play_count: %s" % (min_play_count))
             self.logger.debug("min_skip_count: %s" % (min_skip_count))
-            remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).filter(sspTrack.albumid == self.album).count()
+            remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == self.album).count()
             self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
             if remaining_album_tracks == 0:
                 self.logger.debug("No tracks left to play, selecting new album")
-                self.album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
+                self.album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
             self.logger.debug("Album ID: %s" % (self.album))
-            self.track = self.library.query(sspTrack).filter(sspTrack.albumid == self.album).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).filter(sspTrack.albumid == self.album).order_by(sspTrack.filepath).first()
+            self.track = self.library.query(sspTrack).filter(sspTrack.albumid == self.album).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == self.album).order_by(sspTrack.filepath).first()
             if self.track.skipcount > min_skip_count or self.track.playcount > min_play_count or self.track.albumid != self.album:
                 self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
         else:
