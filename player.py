@@ -23,7 +23,9 @@
 # Icky work-around for the gst module setting up it's own parser... the bastard...
 import argparse
 parser = argparse.ArgumentParser(description='Super Simple Player')
-parser.add_argument('--passive', action='store_true', help="Don't update track statistics or delete missing tracks.")
+parser.add_argument('--passive', action='store_true', help="Don't update track statistics.")
+parser.add_argument('--albums', action='store_true', help="Album mode, randomly select an album to play rather than a track.")
+parser.add_argument('--debug', action='store_true', help="Enable debug logging.")
 args = parser.parse_args()
 del parser
 
@@ -37,8 +39,9 @@ from datetime import datetime
 import logging
 import pynotify
 
-from library import *
+from utfurl import fixurl
 
+from library import *
 
 class TrackInfo:
     def __init__(self):
@@ -50,8 +53,8 @@ class TrackInfo:
     def tolabel(self):
         return "%s\n%s\n%s (%s)" % (self.title, self.artist, self.album, self.year)
 
-    def totitle(self):
-        return "SSP : %s - %s - %s (%s)" % (self.title, self.artist, self.album, self.year)
+    def totitle(self, extras = ""):
+        return "SSP : %s - %s - %s (%s)" % (self.title, self.artist, self.album, self.year) + extras
 
     def tonotification(self):
         return (self.title, ("%s\n%s (%s)" % (self.artist, self.album, self.year)))
@@ -59,14 +62,16 @@ class TrackInfo:
 
 class Player:
 
-    def __init__(self, passive=False):
-        self.logger = logging.basicConfig(filename='%s/ssp.log' % os.path.dirname(sys.argv[0]), level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp")
+    def __init__(self, passive=False, album_mode=False):
         self.logger = logging.getLogger("ssp")
-        self.logger.info("Startup, passive mode %s" % passive)
+        self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s" % (passive, album_mode, SCHEMA_VERSION))
 
         self.passive = passive
+        self.album_mode = album_mode
+        self.album = "ssp-rocks-your-socks-off"
         self.trackinfo = TrackInfo()
         self.library = connect()
+        self.logger.debug("Connected to library")
 
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title("SSP")
@@ -100,10 +105,22 @@ class Player:
         self.notification = pynotify.Notification("SSP")
 
 
+    def updateTitle(self):
+        s = ""
+        if self.album_mode:
+            s = " [Album Mode]"
+        self.window.set_title(self.trackinfo.totitle(s))
+
+
     def key_press(self, widget, event, data=None):
         #Only exit if window is closed or Escape key is pressed
         if event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "space":
             self.skip()
+            return True
+        elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "a":
+            self.album_mode = not self.album_mode
+            self.logger.debug("Album mode %s" % (self.album_mode))
+            self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
             return True
@@ -113,20 +130,39 @@ class Player:
 
 
     def play(self):
-        self.track = self.library.query(sspTrack).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()
+        if self.album_mode:
+            # Super happy album mode
+            self.logger.debug("Selecting track based on album mode algorithm")
+            min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
+            min_skip_count = self.library.query(func.min(sspTrack.skipcount)).first()[0]
+            min_count = min(min_play_count, min_skip_count)
+            self.logger.debug("min_play_count: %s" % (min_play_count))
+            self.logger.debug("min_skip_count: %s" % (min_skip_count))
+            remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).filter(sspTrack.albumid == self.album).count()
+            self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
+            if remaining_album_tracks == 0:
+                self.logger.debug("No tracks left to play, selecting new album")
+                self.album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
+            self.logger.debug("Album ID: %s" % (self.album))
+            self.track = self.library.query(sspTrack).filter(sspTrack.albumid == self.album).filter(sspTrack.playcount == min_count).filter(sspTrack.skipcount == min_count).filter(sspTrack.albumid == self.album).order_by(sspTrack.filepath).first()
+            if self.track.skipcount > min_skip_count or self.track.playcount > min_play_count or self.track.albumid != self.album:
+                self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
+        else:
+            # Regularly ordinary ssp time
+            self.logger.debug("Selecting track based on standard algorithm")
+            self.track = self.library.query(sspTrack).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()
+            self.album = self.track.albumid # Set this so we can continue with an album we stumble across
+
+        self.logger.debug("Selected track %s" % (self.track))
         self.stat = self.library.query(sspStat).filter("hour = %s" % datetime.now().hour).first()
         self.trackinfo = TrackInfo()
 
         if os.path.isfile(self.track.filepath):
-            self.player.set_property("uri", "file://" + self.track.filepath)
+            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
             self.player.set_state(STATE_PLAYING)
         else:
             self.logger.info("Oops, \"%s\" doesn't seem to exist anymore" % self.track.filepath)
             self.stop()
-            if not self.passive:
-                self.logger.warning("Removing \"%s\" from the library." % self.track.filepath)
-                self.library.delete(self.track)
-                self.library.commit()
             self.play()
 
 
@@ -137,6 +173,7 @@ class Player:
             self.track.skipcount += 1
             self.stat.skipcount += 1
             self.library.commit()
+            self.logger.debug("Updated stats on skip %s" % (self.track))
         self.play()
 
 
@@ -155,6 +192,7 @@ class Player:
                 self.stat.playcount += 1
                 self.track.lastplayed = datetime.now()
                 self.library.commit()
+                self.logger.debug("Updated stats on play completion %s" % (self.track))
             self.play()
 
         elif t == MESSAGE_ERROR: # Eeek!
@@ -175,7 +213,7 @@ class Player:
                             self.trackinfo.year = str(taglist["date"].year)
 
                     self.label.set_label(self.trackinfo.tolabel())
-                    self.window.set_title(self.trackinfo.totitle())
+                    self.updateTitle()
                     self.notify(self.trackinfo.tonotification())
 
 
@@ -185,6 +223,13 @@ class Player:
 
 
 if __name__ == "__main__":
-    p = Player(args.passive)
+    logger = logging.basicConfig(filename='%s/ssp.log' % os.path.dirname(sys.argv[0]), level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp")
+    logger = logging.getLogger("ssp")
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+
+    p = Player(args.passive, args.albums)
     p.play()
     gtk.main()
+
+    logger.info("Shutdown")
