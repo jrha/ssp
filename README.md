@@ -34,7 +34,7 @@ Getting Started
 Album Mode
 ------------
 Play randomly selected albums from start to finish, skipping tracks if they have been played or skipped previously.
-Toggle with the `a` key at runtime and/or start the player in album mode with `--album`.
+Toggle with the `a` key at runtime and/or start the player in album mode with `--albums`.
 
 Passive Mode
 ------------
