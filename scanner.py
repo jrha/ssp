@@ -19,6 +19,14 @@
 #  MA 02110-1301, USA.
 #
 
+
+# Icky work-around for the gst module setting up it's own parser... the bastard...
+import argparse
+parser = argparse.ArgumentParser(description='Super Simple Player - Library Updater')
+parser.add_argument('--debug', action="store_true", help="Print lots of debugging information while running")
+args = parser.parse_args()
+del parser
+
 import sys, os
 import gtk
 import pygst
@@ -29,6 +37,7 @@ from datetime import datetime
 import mimetypes
 import json
 import urllib
+import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -38,51 +47,16 @@ from datetime import datetime
 
 from utfurl import fixurl
 
+from library import *
+from sqlalchemy.exc import IntegrityError
+
 mimetypes.init()
-
-TOP = u"/home/media/audio/ReTagged/"
-
-Base = declarative_base()
-
-class scannerTrack(Base):
-    __tablename__ = 'tracks'
-    filepath = Column(String(512), primary_key=True)
-    aid = Column(String(48))
-    tid = Column(String(48))
-    bitrate = Column(Integer())
-    channels = Column(String(16))
-    codec = Column(String(24))
-
-    def __init__(self, filepath):
-        self.filepath = filepath
-        self.aid = ""
-        self.tid = ""
-        self.bitrate = None
-        self.channels = ""
-        self.codec = ""
-
-    def __repr__(self):
-        return "<Track (%s - aid %s, tid %s, bitrate %s, channels %s, codec %s)>" % (self.filepath, self.aid, self.tid, self.bitrate, self.channels, self.codec)
-
-    def complete(self):
-        if self.filepath and self.aid and self.tid and self.bitrate and self.channels and self.codec:
-            return True
-        return False
-
-
-def connect():
-    engine = create_engine('sqlite:///scanner.db', echo=False)
-
-    Base.metadata.create_all(engine)
-
-    Session = sessionmaker(bind=engine)
-
-    return(Session())
-
 
 class Scanner:
 
-    def __init__(self, filelist):
+    def __init__(self, session, tracklist):
+        self.logger = logging.getLogger("ssp-scanner")
+
         self.track = None
 
         self.player = gst.element_factory_make("playbin2", "player")
@@ -94,31 +68,33 @@ class Scanner:
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
 
-        self.filelist = filelist
+        self.tracklist = tracklist
 
-        self.session = connect()
+        self.logger.debug("Connecting to database")
+        self.session = session
 
 
     def scan(self):
-        if os.path.isfile(self.filepath):
-            self.player.set_property("uri", "file://" + fixurl(self.filepath.replace("#","%23")))
+        if os.path.isfile(self.track.filepath):
+            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
             self.player.set_state(gst.STATE_PLAYING)
-            print("Scanning %s" % self.filepath)
+            self.logger.debug(u"Scanning %s" % self.track.filepath)
 
 
     def stop(self):
         if self.player.get_state() != gst.STATE_NULL:
             self.player.set_state(gst.STATE_NULL)
-            if self.track:
-                self.session.add(self.track)
 
 
     def next(self):
         self.stop()
-        if len(self.filelist) > 0:
-            self.filepath = self.filelist.pop()
-            self.track = scannerTrack(self.filepath)
+        if len(self.tracklist) > 0:
+            self.track = self.tracklist.pop()
             self.scan()
+            remaining = len(tracklist)
+            if remaining % 100 == 0:
+                self.logger.info("%d tracks remaining, session committed up to this point" % (remaining))
+                session.commit()
         else:
             self.session.commit()
             gtk.main_quit()
@@ -133,52 +109,59 @@ class Scanner:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             self.stop()
-            print("Hit end of %s" % self.filepath)
-            print(self.track)
+            self.logger.debug(u"Hit end of %s" % self.filepath)
+            self.logger.debug(self.track)
             self.next()
 
         elif t == gst.MESSAGE_ERROR: # Eeek!
             self.stop()
+            self.session.commit()
             err, debug = message.parse_error()
-            print("Error: %s" % err, debug)
+            self.logger.error("Hit an error scanning %s, session committed up to this point" % self.track.filepath)
+            self.logger.error("%s\t%s" % (err, debug))
 
         elif t == gst.MESSAGE_TAG:
                 taglist = message.parse_tag()
                 keys = taglist.keys()
                 if "musicbrainz-trackid" in keys and "musicbrainz-albumid" in keys:
-                    self.track.tid = taglist["musicbrainz-trackid"]
-                    self.track.aid = taglist["musicbrainz-albumid"]
-                elif "nominal-bitrate" in keys:
-                    self.track.bitrate = taglist["nominal-bitrate"]
-                elif "bitrate" in keys:
-                    self.track.bitrate = taglist["bitrate"]
-                elif "channel-mode" in keys:
-                    self.track.channels = taglist["channel-mode"]
-                elif "audio-codec" in keys:
-                    self.track.codec = taglist["audio-codec"]
+                    self.track.trackid = taglist["musicbrainz-trackid"]
+                    self.track.albumid = taglist["musicbrainz-albumid"]
+                    self.logger.debug("Got IDs\ttrack = %s\talbum = %s" % (self.track.trackid, self.track.albumid) )
+                #elif "nominal-bitrate" in keys:
+                #    self.track.bitrate = taglist["nominal-bitrate"]
+                #elif "bitrate" in keys:
+                #    self.track.bitrate = taglist["bitrate"]
+                #elif "channel-mode" in keys:
+                #    self.track.channels = taglist["channel-mode"]
+                #elif "audio-codec" in keys:
+                #    self.track.codec = taglist["audio-codec"]
                 else:
                     for k in keys:
-                        print("%s - %s" % (k, taglist[k]))
+                        self.logger.debug("Extra tag: %s\t%s" % (k, taglist[k]))
 
-
-        if self.track.complete():
+        if self.track.albumid and self.track.trackid:
             self.next()
 
 
 
 if __name__ == "__main__":
-    filelist = []
-    for root, dirs, files in os.walk(TOP):
-        for f in files:
-            filepath = "%s/%s" % (root, f)
-            mimetype = mimetypes.guess_type(filepath)
-            if type(mimetype) is tuple:
-                mimetype = mimetype[0]
-            if mimetype and "audio" in mimetype:
-                filelist.append(filepath)
+    logger = logging.basicConfig(level=logging.INFO, format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp-scanner")
+    logger = logging.getLogger("ssp-scanner")
+    session = connect()
 
-    p = Scanner(filelist)
-    p.next()
+    if args.debug:
+        logger.level = logging.DEBUG
+    tracklist = []
 
-    gtk.main()
+    tracklist = session.query(sspTrack).filter(sspTrack.trackid == None).all()
+    logger.info("%d tracks need tags scanning" % (len(tracklist)))
+    if len(tracklist) > 0:
+        logger.info("Starting tag scan")
+        p = Scanner(session, tracklist)
+        p.next()
+        gtk.main()
+        session.commit()
+        logger.info("Scanner finished, committing changes and exiting")
+    else:
+        logger.info("No tracks to scan, exiting")
 
