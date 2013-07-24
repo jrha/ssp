@@ -19,6 +19,9 @@
 #  MA 02110-1301, USA.
 #
 
+from time import sleep
+from sys import stdout
+
 from library import *
 
 from prettytable import PrettyTable
@@ -37,6 +40,25 @@ def last_played(library):
         table.add_row([track.lastplayed, filepath[-3], filepath[-1]])
 
     table.printt()
+
+
+def unplay_last_played(library):
+    track = library.query(sspTrack).order_by(sspTrack.lastplayed.desc()).first()
+    print "Unplaying: %s" % (track.filepath)
+    print "          plays:%d" % (track.playcount)
+    print "          skips: %d" % (track.skipcount)
+    print "    last played: %s" % (track.lastplayed)
+    print
+    print "This will only re-queue an accidentally played track, hourly play statistics will be unaffected."
+    print "There will be a five second pause while you think about what you have done."
+    for i in range(0, 5):
+        stdout.write("%d..." % (5-i))
+        stdout.flush()
+        sleep(1)
+    track.playcount -= 1
+    track.lastplayed = None
+    library.commit()
+    print "DONE"
 
 
 def most_skipped_artists(library):
@@ -78,11 +100,13 @@ if __name__ == "__main__":
     library = connect()
     import argparse
     parser = argparse.ArgumentParser(description='Super Simple Player')
-    parser.add_argument('info', choices=["last_played", "most_skipped_artists", "playthrough_progress"], help="Which piece of information to display")
+    parser.add_argument('info', choices=["last_played", "unplay_last_played", "most_skipped_artists", "playthrough_progress"], help="Which piece of information to display")
     args = parser.parse_args()
-    
+
     if args.info == "last_played":
         last_played(library)
+    elif args.info == "unplay_last_played":
+        unplay_last_played(library)
     elif args.info == "most_skipped_artists":
         most_skipped_artists(library)
     elif args.info == "playthrough_progress":
