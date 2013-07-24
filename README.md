@@ -15,6 +15,7 @@ Controls
 --------
 * __ESC__ - Exit
 * __Space__ - Skip current track
+* __a__ - Toggle album mode
 
 
 Requirements
@@ -30,8 +31,12 @@ Getting Started
 * Run `./player.py`.
 * Enjoy.
 
+Album Mode
+------------
+Play randomly selected albums from start to finish, skipping tracks if they have been played or skipped previously.
+Toggle with the `a` key at runtime and/or start the player in album mode with `--album`.
 
 Passive Mode
 ------------
-If for some reason you don't want the player to update statistics in the library or delete missing tracks,
+If for some reason you don't want the player to update statistics in the library,
 run with `--passive`, this is probably only useful if you are testing something.
