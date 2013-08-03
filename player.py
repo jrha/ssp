@@ -122,6 +122,9 @@ class Player:
             self.logger.debug("Album mode %s" % (self.album_mode))
             self.updateTitle()
             return True
+        elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "p":
+            self.flag_problem()
+            return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
             return True
         else:
@@ -174,6 +177,11 @@ class Player:
             self.library.commit()
             self.logger.debug("Updated stats on skip %s" % (self.track))
         self.play()
+
+
+    def flag_problem(self):
+        self.logger.info("PROBLEM flagged with %s" % (self.track))
+        self.skip()
 
 
     def stop(self):

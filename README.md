@@ -15,6 +15,7 @@ Controls
 * __ESC__ - Exit
 * __Space__ - Skip current track
 * __a__ - Toggle album mode
+* __p__ - Flag problem with current track and skip it
 
 
 Requirements
@@ -40,3 +41,9 @@ Passive Mode
 If for some reason you don't want the player to update statistics in the library,
 run with `--passive`, this is probably only useful if you are testing something.
 Album Mode will play one track forever in passive mode as it relies on track statistics.
+
+Flagging Problem Tracks
+-----------------------
+If you come across a track which has problems (skipping audio, distortion, doesn't finish playing...)
+press __p__ to skip it and write a message to the player log flagging the track as problematic.
+Find these messages later by searching for __PROBLEM__ in the log file, e.g. `grep PROBLEM ssp.log`.
