@@ -17,13 +17,11 @@ Controls
 * __a__ - Toggle album mode
 * __p__ - Flag problem with current track and skip it
 
-
 Requirements
 ------------
 * python-sqlalchemy
 * pygtk
 * A collection of music with musicbrainz tags (use Picard)
-
 
 Getting Started
 ---------------
@@ -45,5 +43,5 @@ Album Mode will play one track forever in passive mode as it relies on track sta
 Flagging Problem Tracks
 -----------------------
 If you come across a track which has problems (skipping audio, distortion, doesn't finish playing...)
-press __p__ to skip it and write a message to the player log flagging the track as problematic.
+press `p` to skip it and write a message to the player log flagging the track as problematic.
 Find these messages later by searching for __PROBLEM__ in the log file, e.g. `grep PROBLEM ssp.log`.
