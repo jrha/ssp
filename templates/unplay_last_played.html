@@ -1,0 +1,34 @@
+$def with (nav, trackname, playcount, skipcount, lastplayed)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SSP - Unplay Last Played</title>
+        <link href="http://netdna.bootstrapcdn.com/bootswatch/2.3.2/flatly/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container">
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <a class="brand" href="/">SSP</a>
+                    <ul class="nav">
+$:nav
+                    </ul>
+                </div>
+            </div>
+            <div class="hero-unit">
+                <h1>Unplay Last Played</h1>
+            </div>
+            <div>
+                <p>This will only re-queue an accidentally played track, hourly play statistics will be unaffected.</p>
+                <dl class="dl-horizontal">
+                    <dt>Track name</dt><dd>$trackname</dd>
+                    <dt>Play count</dt><dd>$playcount</dd>
+                    <dt>Skip count</dt><dd>$skipcount</dd>
+                    <dt>Last played</dt><dd>$lastplayed</dd>
+                </dl>
+                <p>There will be a five second pause while you think about what you have done.</p>
+                <button class="btn btn-primary">Unplay</button>
+            </div>
+        </div>
+    </body>
+</html>
