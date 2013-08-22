@@ -93,9 +93,6 @@ def last_played():
     fields = ["Last Played", "Artist", "Track"]
     table = PrettyTable(fields)
 
-    for field in fields:
-        table.set_field_align(field, "l")
-
     for track in tracks:
         filepath = track.filepath.split("/")
         table.add_row([track.lastplayed, filepath[-3], filepath[-1]])
@@ -124,9 +121,6 @@ def most_skipped_artists():
 
     fields = ["Skips", "Artist"]
     table = PrettyTable(fields)
-
-    for field in fields:
-        table.set_field_align(field, "l")
 
     artists = {}
 
