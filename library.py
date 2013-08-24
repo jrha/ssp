@@ -61,13 +61,31 @@ class sspStat(Base):
     skipcount = Column(Integer())
 
     def __init__(self, hour):
-        if hour > 0 and hour < 24:
+        if hour >= 0 and hour < 24:
             self.hour = hour
             self.playcount = 0
             self.skipcount = 0
 
     def __repr__(self):
-        return "<Stat (Hour %s - %s plays, %s skips)>" % (self.hour, self. playcount, self.skipcount)
+        return "<Stat (Hour %s - %s plays, %s skips)>" % (self.hour, self.playcount, self.skipcount)
+
+
+class sspWeekStat(Base):
+    __tablename__ = 'weekstats'
+    hour = Column(Integer(24), primary_key=True)
+    day = Column(Integer(7), primary_key=True)
+    playcount = Column(Integer())
+    skipcount = Column(Integer())
+
+    def __init__(self, hour, day):
+        if hour >= 0 and hour < 24 and day >= 0 and day < 7:
+            self.hour = hour
+            self.day = day
+            self.playcount = 0
+            self.skipcount = 0
+
+    def __repr__(self):
+        return "<WeekStat (Hour %s, Day %s - %s plays, %s skips)>" % (self.hour, self.day, self.playcount, self.skipcount)
 
 
 def connect():
