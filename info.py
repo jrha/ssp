@@ -37,7 +37,7 @@ PAGES = [
     'stats',
 ]
 
-render = web.template.render('templates')
+render = web.template.render('templates', globals = {'type' : type})
 
 def navbar(page):
     result = []
@@ -75,8 +75,10 @@ def home():
     library = connect()
     return pageify(
         'Super Simple Player',
-        '<p>Schema Version %s</p>' % SCHEMA_VERSION +
-        '<p>%d tracks in library</p>' % library.query(sspTrack).count()
+        [
+            'Schema Version %s' % SCHEMA_VERSION,
+            '%d tracks in library' % library.query(sspTrack).count(),
+        ]
     )
 
 

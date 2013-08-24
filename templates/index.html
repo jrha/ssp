@@ -18,7 +18,11 @@ $:nav
             <div class="hero-unit">
                 <h1>$title</h1>
             </div>
-$:content
+            $if type(content) is list:
+                $for p in content
+                    <p>$p</p>
+            $else:
+                $:content
         </div>
     </body>
 </html>
