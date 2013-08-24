@@ -1,4 +1,4 @@
-$def with (nav, limit, stats)
+$def with (nav, stats, weekstats)
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -17,6 +17,21 @@ $:nav
             </div>
             <div class="hero-unit">
                 <h1>Stats</h1>
+            </div>
+            <div>
+                <table class="table table-bordered">
+                    <tr>
+                        <th></th>
+                        $for h in range(0, 24)
+                                <th>$h</th>
+                    </tr>
+                    $for d in range(0, 7)
+                        <tr>
+                            <th>$d</th>
+                            $for h in range(0, 24)
+                                <td style="background-color: $weekstats[d][h][0]">$weekstats[d][h][1],$weekstats[d][h][2]</td>
+                        </tr>
+                </table>
             </div>
             <div>
                 $for hour, offset, skip, play, skipcount, playcount in stats

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 #  Copyright (C) 2013  James Adams
@@ -25,8 +25,6 @@ import web
 
 from library import *
 
-from prettytable import PrettyTable
-
 URLS = (
     '/(.*)', 'info',
 )
@@ -52,14 +50,9 @@ def navbar(page):
 
 
 def pageify(page, content):
-    #template = open("template.html").read().decode('utf-8')
     nav = navbar(page)
     title = page.replace('_', ' ').title()
     return render.index(nav, title, content)
-
-
-def htmlify(page, table):
-    return pageify(page, table.get_html_string(border=False, format=False, attributes={'class' : 'table table-striped table-hover'}))
 
 
 class info():
@@ -91,13 +84,13 @@ def last_played():
     library = connect()
     tracks = library.query(sspTrack).order_by(sspTrack.lastplayed.desc()).limit(50).all()
     fields = ["Last Played", "Artist", "Track"]
-    table = PrettyTable(fields)
+    table = []
 
     for track in tracks:
         filepath = track.filepath.split("/")
-        table.add_row([track.lastplayed, filepath[-3], filepath[-1]])
+        table.append([track.lastplayed, filepath[-3], filepath[-1]])
 
-    return htmlify('last_played', table)
+    return render.table(navbar("last_played"), "Last Played", fields, table)
 
 
 def unplay_last_played():
@@ -120,7 +113,7 @@ def most_skipped_artists():
     tracks = library.query(sspTrack.filepath).filter(sspTrack.skipcount >= 1).all()
 
     fields = ["Skips", "Artist"]
-    table = PrettyTable(fields)
+    table = []
 
     artists = {}
 
@@ -136,9 +129,9 @@ def most_skipped_artists():
     artists.reverse()
 
     for record in artists[:20]:
-        table.add_row(record)
+        table.append(record)
 
-    return htmlify('most_skipped_artists', table)
+    return render.table(navbar("most_skipped_artists"), "Most Skipped Artists", fields, table)
 
 
 def playthrough_progress():
@@ -173,7 +166,21 @@ def stats():
             )
         )
 
-    return render.stats(navbar('stats'), limit, stats)
+
+    weekgrid = [ [ ('rgb(0, 0, 0);', 0, 0) for h in range(0, 24) ] for d in range(0, 7) ]
+    weekstats = library.query(sspWeekStat).all()
+    weekmax = float(library.query(func.max(sspWeekStat.skipcount, sspWeekStat.playcount)).first()[0])
+
+    for s in weekstats:
+        rSkips = float(s.skipcount) / weekmax
+        rPlays = float(s.playcount) / weekmax
+
+        r = 255 * rSkips
+        b = 255 * rPlays
+
+        weekgrid[s.day][s.hour] = ("rgb(%d, 0, %d);" % (r, b), s.playcount, s.skipcount)
+
+    return render.stats(navbar('stats'), stats, weekgrid)
 
 
 if __name__ == "__main__":
