@@ -51,13 +51,22 @@ class TrackInfo:
         self.year = ""
 
     def tolabel(self):
-        return "%s\n%s\n%s (%s)" % (self.title, self.artist, self.album, self.year)
+        s = "%s\n%s\n%s" % (self.title, self.artist, self.album)
+        if self.year:
+            s += " (%s)" % (self.year)
+        return s
 
     def totitle(self, extras = ""):
-        return "SSP : %s - %s - %s (%s)" % (self.title, self.artist, self.album, self.year) + extras
+        s = "SSP : %s - %s - %s" % (self.title, self.artist, self.album)
+        if self.year:
+            s += " (%s)" % (self.year)
+        return s + extras
 
     def tonotification(self):
-        return (self.title, ("%s\n%s (%s)" % (self.artist, self.album, self.year)))
+        s = "%s\n%s" % (self.artist, self.album)
+        if self.year:
+            s += " (%s)" % (self.year)
+        return (self.title, s)
 
 
 class Player:
