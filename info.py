@@ -169,18 +169,19 @@ def stats():
         )
 
 
-    weekgrid = [ [ ('rgb(0, 0, 0);', 0, 0) for h in range(0, 24) ] for d in range(0, 7) ]
+    weekgrid = [ [ ('rgb(255, 255, 255);', 0, 0) for h in range(0, 24) ] for d in range(0, 7) ]
     weekstats = library.query(sspWeekStat).all()
-    weekmax = float(library.query(func.max(sspWeekStat.skipcount, sspWeekStat.playcount)).first()[0])
+    weekmax = float(library.query(func.max(func.max(sspWeekStat.skipcount, sspWeekStat.playcount))).first()[0])
 
     for s in weekstats:
         rSkips = float(s.skipcount) / weekmax
         rPlays = float(s.playcount) / weekmax
 
-        r = 255 * rSkips
-        b = 255 * rPlays
+        r = 255 - (255 * rPlays)
+        b = 255 - (255 * rSkips)
+        g = (r + b) / 2
 
-        weekgrid[s.day][s.hour] = ("rgb(%d, 0, %d);" % (r, b), s.playcount, s.skipcount)
+        weekgrid[s.day][s.hour] = ("rgb(%d, %d, %d);" % (r, g, b), s.playcount, s.skipcount)
 
     return render.stats(navbar('stats'), stats, weekgrid)
 
