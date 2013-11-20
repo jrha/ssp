@@ -1,4 +1,14 @@
 $def with (nav, stats, weekstats)
+$code:
+    days = [
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat',
+        'Sun',
+    ]
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -21,15 +31,15 @@ $:nav
             <div>
                 <table class="table table-bordered">
                     <tr>
-                        <th></th>
+                        <th style="width: 4%">&nbsp;</th>
                         $for h in range(0, 24)
-                                <th>$h</th>
+                            <th style="width: 4%">$("%02d" % h)</th>
                     </tr>
                     $for d in range(0, 7)
                         <tr>
-                            <th>$d</th>
+                            <th>$days[d]</th>
                             $for h in range(0, 24)
-                                <td style="background-color: $weekstats[d][h][0]">$weekstats[d][h][1],$weekstats[d][h][2]</td>
+                                <td style="background-color: $weekstats[d][h][0]" title="$weekstats[d][h][1] plays, $weekstats[d][h][2] skips">&nbsp;</td>
                         </tr>
                 </table>
             </div>
