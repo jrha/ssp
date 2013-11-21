@@ -22,6 +22,7 @@
 from time import sleep
 from sys import stdout
 import web
+import calendar
 
 from library import *
 
@@ -183,7 +184,7 @@ def stats():
 
         weekgrid[s.day][s.hour] = ("rgb(%d, %d, %d);" % (r, g, b), s.playcount, s.skipcount)
 
-    return render.stats(navbar('stats'), stats, weekgrid)
+    return render.stats(navbar('stats'), stats, weekgrid, calendar.day_abbr)
 
 
 if __name__ == "__main__":
