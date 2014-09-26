@@ -113,7 +113,7 @@ class Scanner:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             self.stop()
-            self.logger.debug(u"Hit end of %s" % self.filepath)
+            self.logger.debug(u"Hit end of %s" % self.track.filepath)
             self.logger.debug(self.track)
             self.next()
 
