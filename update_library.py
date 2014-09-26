@@ -48,11 +48,10 @@ if args.path:
                 mimetype = mimetype[0]
 
             if mimetype and "audio" in mimetype:
-                try:
+                if not session.query(sspTrack).filter(sspTrack.filepath == filepath).first():
                     session.add(sspTrack(filepath))
-                    session.commit()
                     print "ADDED: %s" % (filepath.encode('utf8'))
-                except IntegrityError:
+                else:
                     if args.verbose:
                         print "EXISTS: %s" % (filepath.encode('utf8'))
-                    session.rollback()
+        session.commit()
