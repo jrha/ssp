@@ -38,6 +38,7 @@ from gst import element_factory_make, STATE_PLAYING, STATE_NULL, MESSAGE_EOS, ME
 from datetime import datetime
 import logging
 import pynotify
+import random
 
 from utfurl import fixurl
 
@@ -142,11 +143,11 @@ class Player:
 
 
     def play(self):
+        min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
+        min_skip_count = self.library.query(func.min(sspTrack.skipcount)).first()[0]
         if self.album_mode:
             # Super happy album mode
             self.logger.debug("Selecting track based on album mode algorithm")
-            min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
-            min_skip_count = self.library.query(func.min(sspTrack.skipcount)).first()[0]
             self.logger.debug("min_play_count: %s" % (min_play_count))
             self.logger.debug("min_skip_count: %s" % (min_skip_count))
             remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == self.album).count()
@@ -161,7 +162,7 @@ class Player:
         else:
             # Regularly ordinary ssp time
             self.logger.debug("Selecting track based on standard algorithm")
-            self.track = self.library.query(sspTrack).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()
+            self.track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
             self.album = self.track.albumid # Set this so we can continue with an album we stumble across
 
         self.logger.debug("Selected track %s" % (self.track))
