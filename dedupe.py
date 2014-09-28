@@ -27,7 +27,7 @@ parser.add_argument('--debug', action="store_true", help="Print lots of debuggin
 args = parser.parse_args()
 del parser
 
-import sys, os, tempfile, shutil
+import sys, os
 import gtk
 import pygst
 pygst.require("0.10")
@@ -76,7 +76,6 @@ class Deduper:
 
         self.logger.debug("Connecting to database")
         self.session = session
-        self.tempdir = tempfile.mkdtemp()
 
 
     def scan(self):
@@ -107,7 +106,7 @@ class Deduper:
                     self.logger.debug("Keep Object: %s" % keeptrack)
                     for v in self.votes[1:]:
                         self.logger.info("Delete File with vote %d: %s" % v)
-                        shutil.move(v[1], self.tempdir)
+                        os.remove(v[1])
                         deltrack = session.query(sspTrack).filter(sspTrack.filepath == v[1]).first()
                         self.logger.info("Delete Object: %s" % deltrack)
                         session.delete(deltrack)
