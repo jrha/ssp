@@ -166,8 +166,8 @@ class Deduper:
                 elif tags["channel-mode"] == "joint-stereo": vote += 2
 
             if "audio-codec" in keys:
-                if   "FLAC" in tags["audio-codec"]: vote += 6
-                elif "OGG"  in tags["audio-codec"]: vote += 3
+                if   "FLAC" in tags["audio-codec"]: vote += 8
+                elif "OGG"  in tags["audio-codec"]: vote += 4
                 elif "MP3"  in tags["audio-codec"]: vote += 1
 
             self.logger.debug("Vote = %s" % vote)
