@@ -78,6 +78,7 @@ class Player:
 
         self.passive = passive
         self.album_mode = album_mode
+        self.exit_after_current = False
         self.album = "ssp-rocks-your-socks-off"
         self.trackinfo = TrackInfo()
         self.library = connect()
@@ -119,6 +120,8 @@ class Player:
         s = ""
         if self.album_mode:
             s = " [Album Mode]"
+        if self.exit_after_current:
+            s += " [Exit After Current]"
         self.window.set_title(self.trackinfo.totitle(s))
 
 
@@ -134,6 +137,10 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "p":
             self.flag_problem()
+            return True
+        elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "e":
+            self.exit_after_current = not self.exit_after_current
+            self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
             return True
@@ -214,6 +221,9 @@ class Player:
 
         if t == MESSAGE_EOS: # End Of Stream
             self.stop()
+            if self.exit_after_current:
+                gtk.main_quit()
+                return False
             if not self.passive:
                 # Increment play count, set last played
                 self.track.playcount += 1
