@@ -1,0 +1,48 @@
+$def with (nav, stats, weekstats, days)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SSP - Stats</title>
+        <link href="http://netdna.bootstrapcdn.com/bootswatch/2.3.2/flatly/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container">
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <a class="brand" href="/">SSP</a>
+                    <ul class="nav">
+$:nav
+                    </ul>
+                </div>
+            </div>
+            <div class="hero-unit">
+                <h1>Stats</h1>
+            </div>
+            <div>
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 4%">&nbsp;</th>
+                        $for h in range(0, 24)
+                            <th style="width: 4%">$("%02d" % h)</th>
+                    </tr>
+                    $for d in range(0, 7)
+                        <tr>
+                            <th>$days[d]</th>
+                            $for h in range(0, 24)
+                                <td style="background-color: $weekstats[d][h][0]" title="$weekstats[d][h][1] plays, $weekstats[d][h][2] skips">&nbsp;</td>
+                        </tr>
+                </table>
+            </div>
+            <div>
+                $for hour, offset, skip, play, skipcount, playcount in stats
+                    <div class="row">
+                        <div class="span1 text-right"><span class="label">$hour</label></div>
+                        <div class="progress span11" style="height: 26px; margin-bottom: 6px; border-radius: 0;">
+                            <div class="bar bar-danger" style="margin-left: $offset; width: $skip;" title="$skipcount skips"></div>
+                            <div class="bar bar-info" style="width: $play;" title="$playcount plays"></div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </body>
+</html>

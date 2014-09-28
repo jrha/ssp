@@ -1,0 +1,28 @@
+$def with (nav, title, content)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SSP - $title</title>
+        <link href="http://netdna.bootstrapcdn.com/bootswatch/2.3.2/flatly/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container">
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <a class="brand" href="/">SSP</a>
+                    <ul class="nav">
+$:nav
+                    </ul>
+                </div>
+            </div>
+            <div class="hero-unit">
+                <h1>$title</h1>
+            </div>
+            $if type(content) is list:
+                $for p in content
+                    <p>$p</p>
+            $else:
+                $:content
+        </div>
+    </body>
+</html>

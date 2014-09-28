@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 #
-#  Copyright (C) 2012  James Adams
+#  Copyright (C) 2012, 2013  James Adams
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -165,7 +165,17 @@ class Player:
             self.album = self.track.albumid # Set this so we can continue with an album we stumble across
 
         self.logger.debug("Selected track %s" % (self.track))
+
         self.stat = self.library.query(sspStat).filter("hour = %s" % datetime.now().hour).first()
+        if not self.stat:
+            self.stat = sspStat(datetime.now().hour)
+            self.library.add(self.stat)
+
+        self.weekstat = self.library.query(sspWeekStat).filter("hour = %s" % datetime.now().hour).filter("day = %s" % datetime.now().weekday()).first()
+        if not self.weekstat:
+            self.weekstat = sspWeekStat(datetime.now().hour, datetime.now().weekday())
+            self.library.add(self.weekstat)
+
         self.trackinfo = TrackInfo()
 
         if os.path.isfile(self.track.filepath):
@@ -183,6 +193,7 @@ class Player:
             # Increment skip count
             self.track.skipcount += 1
             self.stat.skipcount += 1
+            self.weekstat.skipcount += 1
             self.library.commit()
             self.logger.debug("Updated stats on skip %s" % (self.track))
         self.play()
@@ -206,6 +217,7 @@ class Player:
                 # Increment play count, set last played
                 self.track.playcount += 1
                 self.stat.playcount += 1
+                self.weekstat.playcount += 1
                 self.track.lastplayed = datetime.now()
                 self.library.commit()
                 self.logger.debug("Updated stats on play completion %s" % (self.track))
@@ -217,20 +229,20 @@ class Player:
             self.logger.error("MESSAGE_ERROR: %s" % err, debug)
 
         elif t == MESSAGE_TAG:
-                taglist = message.parse_tag()
-                keys = taglist.keys()
-                if "title" in taglist:
-                    self.trackinfo.title = taglist["title"]
-                    if "artist" in taglist:
-                        self.trackinfo.artist = taglist["artist"]
-                    if "album" in taglist:
-                        self.trackinfo.album = taglist["album"]
-                        if "date" in taglist:
-                            self.trackinfo.year = str(taglist["date"].year)
+            taglist = message.parse_tag()
+            keys = taglist.keys()
+            if "title" in taglist:
+                self.trackinfo.title = taglist["title"]
+                if "artist" in taglist:
+                    self.trackinfo.artist = taglist["artist"]
+                if "album" in taglist:
+                    self.trackinfo.album = taglist["album"]
+                    if "date" in taglist:
+                        self.trackinfo.year = str(taglist["date"].year)
 
-                    self.label.set_label(self.trackinfo.tolabel())
-                    self.updateTitle()
-                    self.notify(self.trackinfo.tonotification())
+                self.label.set_label(self.trackinfo.tolabel())
+                self.updateTitle()
+                self.notify(self.trackinfo.tonotification())
 
 
     def notify(self, message):

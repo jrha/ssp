@@ -1,0 +1,25 @@
+$def with (nav, percent)
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SSP - Playthrough Progress</title>
+        <link href="http://netdna.bootstrapcdn.com/bootswatch/2.3.2/flatly/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container">
+            <div class="navbar">
+                <div class="navbar-inner">
+                    <a class="brand" href="/">SSP</a>
+                    <ul class="nav">
+$:nav
+                    </ul>
+                </div>
+            </div>
+            <div class="hero-unit">
+                <h1>Playthrough Progress</h1>
+            </div>
+            <p>Currently $percent through current pass of library</p>
+            <div class="progress"><div class="bar" style="width: $percent"></div></div>
+        </div>
+    </body>
+</html>
