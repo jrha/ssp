@@ -139,9 +139,9 @@ def most_skipped_artists():
 
 def playthrough_progress():
     library = connect()
-    stats = library.query(func.count(sspTrack.playcount)).group_by(sspTrack.playcount).order_by(sspTrack.playcount.desc()).all()
-    played = float(stats[0][0])
-    unplayed = float(stats[1][0])
+    unplayed = float(library.query(func.count(sspTrack.playcount)).filter(sspTrack.playcount == 0).first()[0])
+    played = float(library.query(func.count(sspTrack.playcount)).filter(sspTrack.playcount > 0).first()[0])
+
     perc = '%.1f%%' % (played / (played + unplayed) * 100)
     return render.playthrough_progress(navbar('playthrough_progress'), perc)
 
