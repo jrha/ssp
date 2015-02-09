@@ -6,7 +6,7 @@ Like a radio station that plays all of your music with a no repeat guarantee!
 
 Features
 --------
-* Only two controls.
+* Only five controls.
 * Tracks are shuffled to equalise play count.
 * Skipped tracks are demoted in play order.
 
@@ -15,6 +15,7 @@ Controls
 * __ESC__ - Exit
 * __Space__ - Skip current track
 * __a__ - Toggle album mode
+* __e__ - Toggle exit after current track completes
 * __p__ - Flag problem with current track and skip it
 
 Requirements
