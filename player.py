@@ -167,7 +167,7 @@ class Player:
             if self.track.skipcount > min_skip_count or self.track.playcount > min_play_count or self.track.albumid != self.album:
                 self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
         else:
-            # Regularly ordinary ssp time
+            # Regular ordinary ssp time
             self.logger.debug("Selecting track based on standard algorithm")
             self.track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
             self.album = self.track.albumid # Set this so we can continue with an album we stumble across
