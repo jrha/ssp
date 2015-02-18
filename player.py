@@ -132,7 +132,7 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "a":
             self.album_mode = not self.album_mode
-            self.logger.debug("Album mode %s" % (self.album_mode))
+            self.logger.debug("Changed album mode to %s" % (self.album_mode))
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "p":
@@ -140,6 +140,7 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "e":
             self.exit_after_current = not self.exit_after_current
+            self.logger.debug("Changed exit after current to %s" % (self.exit_after_current))
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
