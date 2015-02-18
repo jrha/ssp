@@ -47,8 +47,8 @@ class sspTrack(Base):
         self.playcount = 0
         self.skipcount = 0
         self.lastplayed = None
-        albumid = ""
-        trackid = ""
+        self.albumid = ""
+        self.trackid = ""
 
     def __repr__(self):
         return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
