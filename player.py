@@ -39,6 +39,7 @@ from datetime import datetime
 import logging
 import pynotify
 import random
+import json
 
 from utfurl import fixurl
 
@@ -149,6 +150,28 @@ class Player:
             gtk.main_quit()
             return False
 
+    def state_save(self, blank=False):
+        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'w')
+        if not blank:
+            try:
+                d = {
+                    'trackid' : self.track.trackid,
+                }
+            except AttributeError:
+                d = {}
+        else:
+            d = {}
+        self.logger.info("Saved State: %s" % d)
+        json.dump(d, f)
+
+    def state_restore(self):
+        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'r')
+        try:
+            d = json.load(f)
+        except ValueError:
+            d = {}
+        self.logger.info("Restored State: %s" % d)
+        return(d)
 
     def play(self):
         min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
