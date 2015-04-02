@@ -157,6 +157,7 @@ class Player:
             try:
                 d = {
                     'trackid' : self.track.trackid,
+                    'album_mode' : self.album_mode,
                 }
             except AttributeError:
                 d = {}
@@ -308,6 +309,7 @@ if __name__ == "__main__":
 
     restore = p.state_restore()
     if restore:
+        p.album_mode = restore['album_mode'],
         p.play(restore['trackid'])
     else:
         p.play()
