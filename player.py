@@ -147,6 +147,7 @@ class Player:
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
             return True
         else:
+            self.state_save()
             gtk.main_quit()
             return False
 
