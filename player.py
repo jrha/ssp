@@ -318,7 +318,7 @@ if __name__ == "__main__":
 
     restore = p.state_restore()
     if restore:
-        p.album_mode = restore['album_mode'],
+        p.album_mode = restore['album_mode']
         p.play(restore['trackid'])
     else:
         p.play()
