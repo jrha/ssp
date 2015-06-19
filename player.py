@@ -147,6 +147,7 @@ class Player:
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
             return True
         else:
+            self.state_save()
             gtk.main_quit()
             return False
 
@@ -156,6 +157,7 @@ class Player:
             try:
                 d = {
                     'trackid' : self.track.trackid,
+                    'album_mode' : self.album_mode,
                 }
             except AttributeError:
                 d = {}
@@ -173,6 +175,32 @@ class Player:
         self.logger.info("Restored State: %s" % d)
         return(d)
 
+    def select_random(self, min_play_count, min_skip_count):
+        self.logger.debug("Selecting track based on standard algorithm")
+        track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
+        return track
+
+    def select_track(self, trackid):
+        self.logger.debug("Specified trackid, locating track")
+        track = self.library.query(sspTrack).filter(sspTrack.trackid == trackid).first()
+        return track
+
+    def select_album(self, min_play_count, min_skip_count, album):
+        self.logger.debug("Selecting track based on album mode algorithm")
+        self.logger.debug("min_play_count: %s" % (min_play_count))
+        self.logger.debug("min_skip_count: %s" % (min_skip_count))
+        remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).count()
+        self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
+        if remaining_album_tracks == 0:
+            self.logger.debug("No tracks left to play, selecting new album")
+            album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
+        self.logger.debug("Album ID: %s" % (album))
+        track = self.library.query(sspTrack).filter(sspTrack.albumid == album).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).order_by(sspTrack.filepath).first()
+        if track.skipcount > min_skip_count or track.playcount > min_play_count or track.albumid != album:
+            self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
+
+        return track
+
     def play(self, trackid=None):
         min_play_count = self.library.query(func.min(sspTrack.playcount)).first()[0]
         min_skip_count = self.library.query(func.min(sspTrack.skipcount)).first()[0]
@@ -182,28 +210,15 @@ class Player:
             self.logger.debug("Did not specify trackid")
             if self.album_mode:
                 # Super happy album mode
-                self.logger.debug("Selecting track based on album mode algorithm")
-                self.logger.debug("min_play_count: %s" % (min_play_count))
-                self.logger.debug("min_skip_count: %s" % (min_skip_count))
-                remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == self.album).count()
-                self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
-                if remaining_album_tracks == 0:
-                    self.logger.debug("No tracks left to play, selecting new album")
-                    self.album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
-                self.logger.debug("Album ID: %s" % (self.album))
-                self.track = self.library.query(sspTrack).filter(sspTrack.albumid == self.album).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == self.album).order_by(sspTrack.filepath).first()
-                if self.track.skipcount > min_skip_count or self.track.playcount > min_play_count or self.track.albumid != self.album:
-                    self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
+                self.track = self.select_album(min_play_count, min_skip_count, self.album)
             else:
                 # Regular ordinary ssp time
-                self.logger.debug("Selecting track based on standard algorithm")
-                self.track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
-                self.album = self.track.albumid # Set this so we can continue with an album we stumble across
+                self.track = self.select_random(min_play_count, min_skip_count)
         else:
             # Try to find track based on trackid
-            self.logger.debug("Specified trackid, locating track")
-            self.track = self.library.query(sspTrack).filter(sspTrack.trackid == trackid).first()
-            self.album = self.track.albumid # Set this so we can continue with an album
+            self.track = self.select_track(trackid)
+
+        self.album = self.track.albumid # Set this so we can continue with an album
 
 
         self.logger.debug("Selected track %s" % (self.track))
@@ -307,6 +322,7 @@ if __name__ == "__main__":
 
     restore = p.state_restore()
     if restore:
+        p.album_mode = restore['album_mode']
         p.play(restore['trackid'])
     else:
         p.play()
