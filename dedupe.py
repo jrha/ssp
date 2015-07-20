@@ -44,7 +44,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy import func, alias
-from datetime import datetime
 
 from utfurl import fixurl
 
