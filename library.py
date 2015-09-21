@@ -41,6 +41,7 @@ class sspTrack(Base):
     lastplayed = Column(DateTime())
     albumid = Column(String(48))
     trackid = Column(String(48))
+    lastscanned = Column(DateTime())
 
     def __init__(self, filepath):
         self.filepath = filepath
@@ -49,9 +50,10 @@ class sspTrack(Base):
         self.lastplayed = None
         self.albumid = ""
         self.trackid = ""
+        self.lastscanned = None
 
     def __repr__(self):
-        return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
+        return "<Track (%s - %s plays, %s skips, last played %s, last scanned %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed, self.lastscanned)
 
 
 class sspStat(Base):
