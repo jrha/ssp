@@ -32,7 +32,6 @@ del parser
 import sys
 import os
 import gtk
-import gobject
 import pygst
 pygst.require("0.10")
 import pango
