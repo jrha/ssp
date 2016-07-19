@@ -24,30 +24,26 @@
 import argparse
 parser = argparse.ArgumentParser(description='Super Simple Player - Library Updater')
 parser.add_argument('--debug', action="store_true", help="Print lots of debugging information while running")
+group_top = parser.add_mutually_exclusive_group()
+group_top.add_argument('--all', action="store_true", help="Rescan all tracks, even if they have already been scanned")
+group_top.add_argument('--hours', action="store", type=int, default=0, help="Scan tracks that have not been scanned in the last X hours")
+group_top.add_argument('--days', action="store", type=int, default=0, help="Scan tracks that have not been scanned in the last Y days")
+group_top.add_argument('--keyword', action="store", type=str, default=0, help="Scan tracks with the keyword Z in their file path")
 args = parser.parse_args()
 del parser
 
-import sys, os
+import os
 import gtk
 import pygst
 pygst.require("0.10")
 import gst
-import pango
-from datetime import datetime
+from datetime import datetime, timedelta
 import mimetypes
-import json
-import urllib
 import logging
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
 
 from utfurl import fixurl
 
 from library import *
-from sqlalchemy.exc import IntegrityError
 
 mimetypes.init()
 
@@ -122,27 +118,21 @@ class Scanner:
             err, debug = message.parse_error()
             self.logger.error("Hit an error scanning %s, session committed up to this point" % self.track.filepath)
             self.logger.error("%s\t%s" % (err, debug))
+            self.next()
 
         elif t == gst.MESSAGE_TAG:
-                taglist = message.parse_tag()
-                keys = taglist.keys()
-                if "musicbrainz-trackid" in keys and "musicbrainz-albumid" in keys:
-                    self.track.trackid = taglist["musicbrainz-trackid"]
-                    self.track.albumid = taglist["musicbrainz-albumid"]
-                    self.logger.debug("Got IDs\ttrack = %s\talbum = %s" % (self.track.trackid, self.track.albumid) )
-                #elif "nominal-bitrate" in keys:
-                #    self.track.bitrate = taglist["nominal-bitrate"]
-                #elif "bitrate" in keys:
-                #    self.track.bitrate = taglist["bitrate"]
-                #elif "channel-mode" in keys:
-                #    self.track.channels = taglist["channel-mode"]
-                #elif "audio-codec" in keys:
-                #    self.track.codec = taglist["audio-codec"]
-                else:
-                    for k in keys:
-                        self.logger.debug("Extra tag: %s\t%s" % (k, taglist[k]))
+            taglist = message.parse_tag()
+            keys = taglist.keys()
+            if "musicbrainz-trackid" in keys:
+                self.track.trackid = taglist["musicbrainz-trackid"]
+                self.track.lastscanned = datetime.now()
+                self.logger.debug("Got track ID = %s" % self.track.trackid)
+            if "musicbrainz-albumid" in keys:
+                self.track.albumid = taglist["musicbrainz-albumid"]
+                self.track.lastscanned = datetime.now()
+                self.logger.debug("Got album ID = %s" % self.track.albumid)
 
-        if self.track.albumid and self.track.trackid:
+        if self.track.trackid and self.track.albumid and self.track.lastscanned and (self.track.lastscanned > (datetime.now() - timedelta(minutes=1))):
             self.next()
 
 
@@ -156,7 +146,18 @@ if __name__ == "__main__":
         logger.level = logging.DEBUG
     tracklist = []
 
-    tracklist = session.query(sspTrack).filter(sspTrack.trackid == None).all()
+    if args.all:
+        tracklist = session.query(sspTrack).all()
+    elif args.hours or args.days:
+        tracklist = session.query(sspTrack).filter(
+            (sspTrack.lastscanned == None) | (sspTrack.trackid == '') |
+            (sspTrack.lastscanned < datetime.now() - timedelta(hours=args.hours, days=args.days))
+        ).all()
+    elif args.keyword:
+        tracklist = session.query(sspTrack).filter(sspTrack.filepath.like('%%%s%%' % args.keyword)).all()
+    else:
+        tracklist = session.query(sspTrack).filter((sspTrack.trackid == None) | (sspTrack.trackid == '')).all()
+
     logger.info("%d tracks need tags scanning" % (len(tracklist)))
     if len(tracklist) > 0:
         logger.info("Starting tag scan")
@@ -167,4 +168,3 @@ if __name__ == "__main__":
         logger.info("Scanner finished, committing changes and exiting")
     else:
         logger.info("No tracks to scan, exiting")
-
