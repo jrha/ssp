@@ -157,8 +157,8 @@ class Deduper:
                     elif tags[k] >= 192000: vote += 2
                     elif tags[k] >= 160000: vote += 1
                     # 128kbps is baseline
-                    elif tags[k] <=  96000: vote -= 1
                     elif tags[k] <=  64000: vote -= 2
+                    elif tags[k] <=  96000: vote -= 1
 
             if "channel-mode" in keys:
                 if tags["channel-mode"] == "stereo": vote += 3
@@ -199,7 +199,20 @@ if __name__ == "__main__":
         logger.level = logging.DEBUG
     tracklist = []
 
-    tracklist = session.query(sspTrack.albumid, sspTrack.trackid, func.count(sspTrack.trackid)).group_by(sspTrack.albumid, sspTrack.trackid).all()
+    tracklist = session.query(
+        sspTrack.albumid,
+        sspTrack.trackid,
+        func.count(sspTrack.trackid)
+    ).group_by(
+        sspTrack.albumid,
+        sspTrack.trackid
+    ).filter(
+        sspTrack.albumid is not None,
+        sspTrack.albumid != '',
+        sspTrack.trackid is not None,
+        sspTrack.trackid != '',
+    ).all()
+
     tracklist = [ (albumid, trackid) for albumid, trackid, count in tracklist if count > 1 ]
 
     logger.info("%d tracks need deduping" % (len(tracklist)))
@@ -211,4 +224,3 @@ if __name__ == "__main__":
         logger.info("Deduper finished, exiting")
     else:
         logger.info("No deupe necessary, exiting")
-
