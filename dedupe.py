@@ -93,7 +93,7 @@ class Deduper:
                     keeptrack = session.query(sspTrack).filter(sspTrack.filepath == self.votes[0][1]).first()
                     self.logger.debug("Keep Object: %s", keeptrack)
                     for v in self.votes[1:]:
-                        self.logger.info("Delete File with vote %d: %s", v)
+                        self.logger.info("Delete File with vote %d: %s", **v)
                         os.remove(v[1])
                         deltrack = session.query(sspTrack).filter(sspTrack.filepath == v[1]).first()
                         self.logger.info("Delete Object: %s", deltrack)
