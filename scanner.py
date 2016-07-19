@@ -139,7 +139,12 @@ class Scanner(object):
 
 
 if __name__ == "__main__":
-    logger = logging.basicConfig(level=logging.INFO, format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp-scanner")
+    logger = logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        name="ssp-scanner",
+    )
     logger = logging.getLogger("ssp-scanner")
     session = connect()
 
