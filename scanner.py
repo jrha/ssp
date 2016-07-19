@@ -47,6 +47,7 @@ from library import *
 
 mimetypes.init()
 
+
 class Scanner(object):
 
     def __init__(self, session, tracklist):
@@ -68,10 +69,9 @@ class Scanner(object):
         self.logger.debug("Connecting to database")
         self.session = session
 
-
     def scan(self):
         if os.path.isfile(self.track.filepath):
-            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
+            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#", "%23")))
             self.player.set_state(gst.STATE_PLAYING)
             self.logger.debug(u"Scanning %s", self.track.filepath)
         else:
@@ -79,11 +79,9 @@ class Scanner(object):
             self.logger.error(u"Unable to find %s on disk", self.track.filepath)
             self.next()
 
-
     def stop(self):
         if self.player.get_state() != gst.STATE_NULL:
             self.player.set_state(gst.STATE_NULL)
-
 
     def next(self):
         self.stop()
@@ -98,7 +96,6 @@ class Scanner(object):
             self.session.commit()
             gtk.main_quit()
 
-
     def on_message(self, _, message):
         # We don't know what order these come in,
         # so we need to deal with them as they come
@@ -106,13 +103,13 @@ class Scanner(object):
 
         t = message.type
 
-        if t == gst.MESSAGE_EOS: # End Of Stream
+        if t == gst.MESSAGE_EOS:  # End Of Stream
             self.stop()
             self.logger.debug(u"Hit end of %s", self.track.filepath)
             self.logger.debug(self.track)
             self.next()
 
-        elif t == gst.MESSAGE_ERROR: # Eeek!
+        elif t == gst.MESSAGE_ERROR:  # Eeek!
             self.stop()
             self.session.commit()
             err, debug = message.parse_error()
@@ -137,7 +134,6 @@ class Scanner(object):
             self.next()
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
@@ -156,13 +152,13 @@ if __name__ == "__main__":
         tracklist = session.query(sspTrack).all()
     elif args.hours or args.days:
         tracklist = session.query(sspTrack).filter(
-            (sspTrack.lastscanned == None) | (sspTrack.trackid == '') |
+            (sspTrack.lastscanned is None) | (sspTrack.trackid == '') |
             (sspTrack.lastscanned < datetime.now() - timedelta(hours=args.hours, days=args.days))
         ).all()
     elif args.keyword:
         tracklist = session.query(sspTrack).filter(sspTrack.filepath.like('%%%s%%' % args.keyword)).all()
     else:
-        tracklist = session.query(sspTrack).filter((sspTrack.trackid == None) | (sspTrack.trackid == '')).all()
+        tracklist = session.query(sspTrack).filter((sspTrack.trackid is None) | (sspTrack.trackid == '')).all()
 
     logger.info("%d tracks need tags scanning", len(tracklist))
     if len(tracklist) > 0:

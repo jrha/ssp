@@ -29,8 +29,10 @@ parser.add_argument('--debug', action='store_true', help="Enable debug logging."
 args = parser.parse_args()
 del parser
 
-import sys, os
-import pygtk, gtk, gobject
+import sys
+import os
+import gtk
+import gobject
 import pygst
 pygst.require("0.10")
 import pango
@@ -45,6 +47,7 @@ from utfurl import fixurl
 
 from library import *
 
+
 class TrackInfo(object):
     def __init__(self):
         self.title = ""
@@ -58,7 +61,7 @@ class TrackInfo(object):
             s += " (%s)" % (self.year)
         return s
 
-    def totitle(self, extras = ""):
+    def totitle(self, extras=""):
         s = "SSP : %s - %s - %s" % (self.title, self.artist, self.album)
         if self.year:
             s += " (%s)" % (self.year)
@@ -116,7 +119,6 @@ class Player(object):
         pynotify.init("SSP")
         self.notification = pynotify.Notification("SSP")
 
-
     def updateTitle(self):
         s = ""
         if self.album_mode:
@@ -124,7 +126,6 @@ class Player(object):
         if self.exit_after_current:
             s += " [Exit After Current]"
         self.window.set_title(self.trackinfo.totitle(s))
-
 
     def key_press(self, _, event, _):
         #Only exit if window is closed or Escape key is pressed
@@ -156,8 +157,8 @@ class Player(object):
         if not blank:
             try:
                 d = {
-                    'trackid' : self.track.trackid,
-                    'album_mode' : self.album_mode,
+                    'trackid': self.track.trackid,
+                    'album_mode': self.album_mode,
                 }
             except AttributeError:
                 d = {}
@@ -218,8 +219,7 @@ class Player(object):
             # Try to find track based on trackid
             self.track = self.select_track(trackid)
 
-        self.album = self.track.albumid # Set this so we can continue with an album
-
+        self.album = self.track.albumid  # Set this so we can continue with an album
 
         self.logger.debug("Selected track %s", self.track)
 
@@ -236,14 +236,13 @@ class Player(object):
         self.trackinfo = TrackInfo()
 
         if os.path.isfile(self.track.filepath):
-            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
+            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#", "%23")))
             self.state_save()
             self.player.set_state(STATE_PLAYING)
         else:
             self.logger.info("Oops, \"%s\" doesn't seem to exist anymore", self.track.filepath)
             self.stop()
             self.play()
-
 
     def skip(self):
         self.stop()
@@ -256,21 +255,18 @@ class Player(object):
             self.logger.debug("Updated stats on skip %s", self.track)
         self.play()
 
-
     def flag_problem(self):
         self.logger.info("PROBLEM flagged with %s", self.track)
         self.skip()
-
 
     def stop(self):
         self.state_save(True)
         self.player.set_state(STATE_NULL)
 
-
     def on_message(self, _, message):
         t = message.type
 
-        if t == MESSAGE_EOS: # End Of Stream
+        if t == MESSAGE_EOS:  # End Of Stream
             self.stop()
             if self.exit_after_current:
                 gtk.main_quit()
@@ -285,7 +281,7 @@ class Player(object):
                 self.logger.debug("Updated stats on play completion %s", self.track)
             self.play()
 
-        elif t == MESSAGE_ERROR: # Eeek!
+        elif t == MESSAGE_ERROR:  # Eeek!
             self.stop()
             err, debug = message.parse_error()
             self.logger.error("MESSAGE_ERROR: %s", err, debug)
@@ -304,7 +300,6 @@ class Player(object):
                 self.label.set_label(self.trackinfo.tolabel())
                 self.updateTitle()
                 self.notify(self.trackinfo.tonotification())
-
 
     def notify(self, message):
         self.notification.update(message[0], message[1], "media-skip-forward")

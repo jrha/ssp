@@ -36,7 +36,8 @@ PAGES = [
     'stats',
 ]
 
-render = web.template.render('templates', globals = {'type' : type})
+render = web.template.render('templates', globals={'type': type})
+
 
 def navbar(page):
     result = []
@@ -124,9 +125,9 @@ def most_skipped_artists():
             artists[artist] = 0
         artists[artist] += 1
 
-    artists = [ [s,a] for a,s in artists.iteritems() ]
-    artists.sort(key = lambda record: record[1])
-    artists.sort(key = lambda record: record[0])
+    artists = [[s, a] for a, s in artists.iteritems()]
+    artists.sort(key=lambda record: record[1])
+    artists.sort(key=lambda record: record[0])
     artists.reverse()
 
     for record in artists[:20]:
@@ -159,7 +160,7 @@ def stats():
     for s in rawstats:
         stats.append(
             (
-                '%.2d - %.2d' % (s.hour, s.hour+1),
+                '%.2d - %.2d' % (s.hour, s.hour + 1),
                 '%.1f%%' % (50 - (s.skipcount / limit) * 50),
                 '%.1f%%' % ((s.skipcount / limit) * 50),
                 '%.1f%%' % ((s.playcount / limit) * 50),
@@ -168,8 +169,7 @@ def stats():
             )
         )
 
-
-    weekgrid = [ [ ('rgb(255, 255, 255);', 0, 0) for _ in range(0, 24) ] for _ in range(0, 7) ]
+    weekgrid = [[('rgb(255, 255, 255);', 0, 0) for _ in range(0, 24)] for _ in range(0, 7)]
     weekstats = library.query(sspWeekStat).all()
     weekmax = float(library.query(func.max(func.max(sspWeekStat.skipcount, sspWeekStat.playcount))).first()[0])
 
