@@ -27,28 +27,17 @@ parser.add_argument('--debug', action="store_true", help="Print lots of debuggin
 args = parser.parse_args()
 del parser
 
-import sys, os
+import os
 import gtk
 import pygst
 pygst.require("0.10")
 import gst
-import pango
-from datetime import datetime
 import mimetypes
-import json
-import urllib
 import logging
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy import func, alias
 
 from utfurl import fixurl
 
 from library import *
-from sqlalchemy.exc import IntegrityError
 
 mimetypes.init()
 
