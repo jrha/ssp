@@ -180,13 +180,13 @@ class Deduper:
             self.logger.error("%s\t%s" % (err, debug))
 
         elif t == gst.MESSAGE_TAG:
-                taglist = message.parse_tag()
-                keys = taglist.keys()
+            taglist = message.parse_tag()
+            keys = taglist.keys()
 
-                for k in keys:
-                    if "private" not in k and "extended" not in k:
-                        self.logger.debug("Found tag: %32s : %s" % (k, taglist[k]))
-                        self.tags[k] = taglist[k]
+            for k in keys:
+                if "private" not in k and "extended" not in k:
+                    self.logger.debug("Found tag: %32s : %s" % (k, taglist[k]))
+                    self.tags[k] = taglist[k]
 
 
 
