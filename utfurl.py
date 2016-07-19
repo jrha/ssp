@@ -7,7 +7,6 @@
 # Based on code from http://stackoverflow.com/questions/804336
 #
 
-import os, sys
 import urlparse, urllib
 
 def fixurl(url):
