@@ -45,7 +45,7 @@ from utfurl import fixurl
 
 from library import *
 
-class TrackInfo:
+class TrackInfo(object):
     def __init__(self):
         self.title = ""
         self.artist = ""
@@ -71,7 +71,7 @@ class TrackInfo:
         return (self.title, s)
 
 
-class Player:
+class Player(object):
 
     def __init__(self, passive=False, album_mode=False):
         self.logger = logging.getLogger("ssp")

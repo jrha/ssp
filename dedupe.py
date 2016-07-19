@@ -41,7 +41,7 @@ from library import *
 
 mimetypes.init()
 
-class Deduper:
+class Deduper(object):
 
     def __init__(self, session, tracklist):
         self.logger = logging.getLogger("ssp-deduper")

@@ -54,7 +54,7 @@ def pageify(page, content):
     return render.index(nav, title, content)
 
 
-class Info():
+class Info(object):
     def GET(self, name):
         if name == "last_played":
             return last_played()

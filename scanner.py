@@ -47,7 +47,7 @@ from library import *
 
 mimetypes.init()
 
-class Scanner:
+class Scanner(object):
 
     def __init__(self, session, tracklist):
         self.logger = logging.getLogger("ssp-scanner")
