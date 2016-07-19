@@ -25,7 +25,7 @@ import calendar
 from library import *
 
 URLS = (
-    '/(.*)', 'info',
+    '/(.*)', 'Info',
 )
 
 PAGES = [
@@ -54,7 +54,7 @@ def pageify(page, content):
     return render.index(nav, title, content)
 
 
-class info():
+class Info():
     def GET(self, name):
         if name == "last_played":
             return last_played()
