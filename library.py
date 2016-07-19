@@ -53,7 +53,13 @@ class sspTrack(Base):
         self.lastscanned = None
 
     def __repr__(self):
-        return "<Track (%s - %s plays, %s skips, last played %s, last scanned %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed, self.lastscanned)
+        return "<Track (%s - %s plays, %s skips, last played %s, last scanned %s)>" % (
+            self.filepath,
+            self.playcount,
+            self.skipcount,
+            self.lastplayed,
+            self.lastscanned,
+        )
 
 
 class sspStat(Base):
@@ -87,7 +93,12 @@ class sspWeekStat(Base):
             self.skipcount = 0
 
     def __repr__(self):
-        return "<WeekStat (Hour %s, Day %s - %s plays, %s skips)>" % (self.hour, self.day, self.playcount, self.skipcount)
+        return "<WeekStat (Hour %s, Day %s - %s plays, %s skips)>" % (
+            self.hour,
+            self.day,
+            self.playcount,
+            self.skipcount,
+        )
 
 
 def connect():

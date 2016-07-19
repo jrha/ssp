@@ -132,7 +132,8 @@ class Scanner:
                 self.track.lastscanned = datetime.now()
                 self.logger.debug("Got album ID = %s", self.track.albumid)
 
-        if self.track.trackid and self.track.albumid and self.track.lastscanned and (self.track.lastscanned > (datetime.now() - timedelta(minutes=1))):
+        recently_scanned = self.track.lastscanned > (datetime.now() - timedelta(minutes=1))
+        if self.track.trackid and self.track.albumid and self.track.lastscanned and recently_scanned:
             self.next()
 
 

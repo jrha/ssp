@@ -110,7 +110,10 @@ class Deduper:
                     self.votes = []
                 self.logger.debug(u"Popping TrackID")
                 self.albumid, self.trackid = self.tracklist.pop()
-                self.files = self.session.query(sspTrack.filepath).filter(sspTrack.albumid == self.albumid, sspTrack.trackid == self.trackid).all()
+                self.files = self.session.query(sspTrack.filepath).filter(
+                    sspTrack.albumid == self.albumid,
+                    sspTrack.trackid == self.trackid,
+                ).all()
             self.logger.debug(u"Popping File")
             self.track = self.files.pop()
             self.vote = 0
@@ -180,7 +183,12 @@ class Deduper:
 
 
 if __name__ == "__main__":
-    logger = logging.basicConfig(level=logging.INFO, format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', name="ssp-deduper")
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        name="ssp-deduper",
+    )
     logger = logging.getLogger("ssp-deduper")
     session = connect()
 
