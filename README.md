@@ -22,6 +22,7 @@ Requirements
 ------------
 * python-sqlalchemy
 * pygtk
+* pygst
 * A collection of music with musicbrainz tags (use Picard)
 
 Getting Started
