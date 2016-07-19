@@ -73,10 +73,10 @@ class Scanner:
         if os.path.isfile(self.track.filepath):
             self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
             self.player.set_state(gst.STATE_PLAYING)
-            self.logger.debug(u"Scanning %s" % self.track.filepath)
+            self.logger.debug(u"Scanning %s", self.track.filepath)
         else:
             self.stop()
-            self.logger.error(u"Unable to find %s on disk" % (self.track.filepath))
+            self.logger.error(u"Unable to find %s on disk", self.track.filepath)
             self.next()
 
 
@@ -92,7 +92,7 @@ class Scanner:
             self.scan()
             remaining = len(tracklist)
             if remaining % 100 == 0:
-                self.logger.info("%d tracks remaining, session committed up to this point" % (remaining))
+                self.logger.info("%d tracks remaining, session committed up to this point", remaining)
                 session.commit()
         else:
             self.session.commit()
@@ -108,7 +108,7 @@ class Scanner:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             self.stop()
-            self.logger.debug(u"Hit end of %s" % self.track.filepath)
+            self.logger.debug(u"Hit end of %s", self.track.filepath)
             self.logger.debug(self.track)
             self.next()
 
@@ -116,8 +116,8 @@ class Scanner:
             self.stop()
             self.session.commit()
             err, debug = message.parse_error()
-            self.logger.error("Hit an error scanning %s, session committed up to this point" % self.track.filepath)
-            self.logger.error("%s\t%s" % (err, debug))
+            self.logger.error("Hit an error scanning %s, session committed up to this point", self.track.filepath)
+            self.logger.error("%s\t%s", err, debug)
             self.next()
 
         elif t == gst.MESSAGE_TAG:
@@ -126,11 +126,11 @@ class Scanner:
             if "musicbrainz-trackid" in keys:
                 self.track.trackid = taglist["musicbrainz-trackid"]
                 self.track.lastscanned = datetime.now()
-                self.logger.debug("Got track ID = %s" % self.track.trackid)
+                self.logger.debug("Got track ID = %s", self.track.trackid)
             if "musicbrainz-albumid" in keys:
                 self.track.albumid = taglist["musicbrainz-albumid"]
                 self.track.lastscanned = datetime.now()
-                self.logger.debug("Got album ID = %s" % self.track.albumid)
+                self.logger.debug("Got album ID = %s", self.track.albumid)
 
         if self.track.trackid and self.track.albumid and self.track.lastscanned and (self.track.lastscanned > (datetime.now() - timedelta(minutes=1))):
             self.next()
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     else:
         tracklist = session.query(sspTrack).filter((sspTrack.trackid == None) | (sspTrack.trackid == '')).all()
 
-    logger.info("%d tracks need tags scanning" % (len(tracklist)))
+    logger.info("%d tracks need tags scanning", len(tracklist))
     if len(tracklist) > 0:
         logger.info("Starting tag scan")
         p = Scanner(session, tracklist)

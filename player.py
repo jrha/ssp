@@ -75,7 +75,7 @@ class Player:
 
     def __init__(self, passive=False, album_mode=False):
         self.logger = logging.getLogger("ssp")
-        self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s" % (passive, album_mode, SCHEMA_VERSION))
+        self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s", passive, album_mode, SCHEMA_VERSION)
 
         self.passive = passive
         self.album_mode = album_mode
@@ -133,7 +133,7 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "a":
             self.album_mode = not self.album_mode
-            self.logger.debug("Changed album mode to %s" % (self.album_mode))
+            self.logger.debug("Changed album mode to %s", self.album_mode)
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "p":
@@ -141,7 +141,7 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "e":
             self.exit_after_current = not self.exit_after_current
-            self.logger.debug("Changed exit after current to %s" % (self.exit_after_current))
+            self.logger.debug("Changed exit after current to %s", self.exit_after_current)
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
@@ -163,7 +163,7 @@ class Player:
                 d = {}
         else:
             d = {}
-        self.logger.info("Saved State: %s" % d)
+        self.logger.info("Saved State: %s", d)
         json.dump(d, f)
 
     def state_restore(self):
@@ -172,7 +172,7 @@ class Player:
             d = json.load(f)
         except ValueError:
             d = {}
-        self.logger.info("Restored State: %s" % d)
+        self.logger.info("Restored State: %s", d)
         return(d)
 
     def select_random(self, min_play_count, min_skip_count):
@@ -187,14 +187,14 @@ class Player:
 
     def select_album(self, min_play_count, min_skip_count, album):
         self.logger.debug("Selecting track based on album mode algorithm")
-        self.logger.debug("min_play_count: %s" % (min_play_count))
-        self.logger.debug("min_skip_count: %s" % (min_skip_count))
+        self.logger.debug("min_play_count: %s", min_play_count)
+        self.logger.debug("min_skip_count: %s", min_skip_count)
         remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).count()
-        self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
+        self.logger.debug("remaining_album_tracks: %s", remaining_album_tracks)
         if remaining_album_tracks == 0:
             self.logger.debug("No tracks left to play, selecting new album")
             album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
-        self.logger.debug("Album ID: %s" % (album))
+        self.logger.debug("Album ID: %s", album)
         track = self.library.query(sspTrack).filter(sspTrack.albumid == album).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).order_by(sspTrack.filepath).first()
         if track.skipcount > min_skip_count or track.playcount > min_play_count or track.albumid != album:
             self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
@@ -221,7 +221,7 @@ class Player:
         self.album = self.track.albumid # Set this so we can continue with an album
 
 
-        self.logger.debug("Selected track %s" % (self.track))
+        self.logger.debug("Selected track %s", self.track)
 
         self.stat = self.library.query(sspStat).filter("hour = %s" % datetime.now().hour).first()
         if not self.stat:
@@ -240,7 +240,7 @@ class Player:
             self.state_save()
             self.player.set_state(STATE_PLAYING)
         else:
-            self.logger.info("Oops, \"%s\" doesn't seem to exist anymore" % self.track.filepath)
+            self.logger.info("Oops, \"%s\" doesn't seem to exist anymore", self.track.filepath)
             self.stop()
             self.play()
 
@@ -253,12 +253,12 @@ class Player:
             self.stat.skipcount += 1
             self.weekstat.skipcount += 1
             self.library.commit()
-            self.logger.debug("Updated stats on skip %s" % (self.track))
+            self.logger.debug("Updated stats on skip %s", self.track)
         self.play()
 
 
     def flag_problem(self):
-        self.logger.info("PROBLEM flagged with %s" % (self.track))
+        self.logger.info("PROBLEM flagged with %s", self.track)
         self.skip()
 
 
@@ -282,13 +282,13 @@ class Player:
                 self.weekstat.playcount += 1
                 self.track.lastplayed = datetime.now()
                 self.library.commit()
-                self.logger.debug("Updated stats on play completion %s" % (self.track))
+                self.logger.debug("Updated stats on play completion %s", self.track)
             self.play()
 
         elif t == MESSAGE_ERROR: # Eeek!
             self.stop()
             err, debug = message.parse_error()
-            self.logger.error("MESSAGE_ERROR: %s" % err, debug)
+            self.logger.error("MESSAGE_ERROR: %s", err, debug)
 
         elif t == MESSAGE_TAG:
             taglist = message.parse_tag()

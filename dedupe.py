@@ -70,10 +70,10 @@ class Deduper:
         if os.path.isfile(self.track.filepath):
             self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
             self.player.set_state(gst.STATE_PLAYING)
-            self.logger.debug(u"Scanning %s" % self.track.filepath)
+            self.logger.debug(u"Scanning %s", self.track.filepath)
         else:
             self.stop()
-            self.logger.error(u"Unable to find %s on disk" % (self.track.filepath))
+            self.logger.error(u"Unable to find %s on disk", self.track.filepath)
             self.next()
 
 
@@ -89,14 +89,14 @@ class Deduper:
                 if self.votes:
                     self.logger.debug(u"Votes are in!")
                     self.votes.sort(reverse=True)
-                    self.logger.debug("Keep File with vote %d: %s" % self.votes[0])
+                    self.logger.debug("Keep File with vote %d: %s", **self.votes[0])
                     keeptrack = session.query(sspTrack).filter(sspTrack.filepath == self.votes[0][1]).first()
-                    self.logger.debug("Keep Object: %s" % keeptrack)
+                    self.logger.debug("Keep Object: %s", keeptrack)
                     for v in self.votes[1:]:
-                        self.logger.info("Delete File with vote %d: %s" % v)
+                        self.logger.info("Delete File with vote %d: %s", v)
                         os.remove(v[1])
                         deltrack = session.query(sspTrack).filter(sspTrack.filepath == v[1]).first()
-                        self.logger.info("Delete Object: %s" % deltrack)
+                        self.logger.info("Delete Object: %s", deltrack)
                         session.delete(deltrack)
                         keeptrack.playcount += deltrack.playcount
                         keeptrack.skipcount += deltrack.skipcount
@@ -106,7 +106,7 @@ class Deduper:
                         elif not keeptrack.lastplayed and deltrack.lastplayed:
                             keeptrack.lastplayed = deltrack.lastplayed
                     session.commit()
-                    self.logger.debug("Merged Object: %s" % keeptrack)
+                    self.logger.debug("Merged Object: %s", keeptrack)
                     self.votes = []
                 self.logger.debug(u"Popping TrackID")
                 self.albumid, self.trackid = self.tracklist.pop()
@@ -117,7 +117,7 @@ class Deduper:
             self.scan()
             remaining = len(tracklist)
             if remaining % 100 == 0:
-                self.logger.info("%d tracks remaining" % (remaining))
+                self.logger.info("%d tracks remaining", remaining)
         else:
             gtk.main_quit()
 
@@ -131,7 +131,7 @@ class Deduper:
 
         if t == gst.MESSAGE_EOS: # End Of Stream
             self.stop()
-            self.logger.debug(u"Hit end of %s" % self.track.filepath)
+            self.logger.debug(u"Hit end of %s", self.track.filepath)
             self.logger.debug(self.track)
 
             tags = self.tags
@@ -158,15 +158,15 @@ class Deduper:
                 elif "OGG"  in tags["audio-codec"]: vote += 4
                 elif "MP3"  in tags["audio-codec"]: vote += 1
 
-            self.logger.debug("Vote = %s" % vote)
+            self.logger.debug("Vote = %s", vote)
             self.votes.append((vote, self.track.filepath))
             self.next()
 
         elif t == gst.MESSAGE_ERROR: # Eeek!
             self.stop()
             err, debug = message.parse_error()
-            self.logger.error("Hit an error scanning %s" % self.track.filepath)
-            self.logger.error("%s\t%s" % (err, debug))
+            self.logger.error("Hit an error scanning %s", self.track.filepath)
+            self.logger.error("%s\t%s", err, debug)
 
         elif t == gst.MESSAGE_TAG:
             taglist = message.parse_tag()
@@ -174,7 +174,7 @@ class Deduper:
 
             for k in keys:
                 if "private" not in k and "extended" not in k:
-                    self.logger.debug("Found tag: %32s : %s" % (k, taglist[k]))
+                    self.logger.debug("Found tag: %32s : %s", k, taglist[k])
                     self.tags[k] = taglist[k]
 
 
@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     tracklist = [ (albumid, trackid) for albumid, trackid, count in tracklist if count > 1 ]
 
-    logger.info("%d tracks need deduping" % (len(tracklist)))
+    logger.info("%d tracks need deduping", len(tracklist))
     if len(tracklist) > 0:
         logger.info("Starting dedupe")
         d = Deduper(session, tracklist)
