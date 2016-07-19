@@ -19,8 +19,6 @@
 #  MA 02110-1301, USA.
 #
 
-from time import sleep
-from sys import stdout
 import web
 import calendar
 
