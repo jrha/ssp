@@ -169,7 +169,7 @@ def stats():
         )
 
 
-    weekgrid = [ [ ('rgb(255, 255, 255);', 0, 0) for h in range(0, 24) ] for d in range(0, 7) ]
+    weekgrid = [ [ ('rgb(255, 255, 255);', 0, 0) for _ in range(0, 24) ] for _ in range(0, 7) ]
     weekstats = library.query(sspWeekStat).all()
     weekmax = float(library.query(func.max(func.max(sspWeekStat.skipcount, sspWeekStat.playcount))).first()[0])
 

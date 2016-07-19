@@ -125,7 +125,7 @@ class Deduper(object):
             gtk.main_quit()
 
 
-    def on_message(self, bus, message):
+    def on_message(self, _, message):
         # We don't know what order these come in,
         # so we need to deal with them as they come
         # and skip when we've got everything we need

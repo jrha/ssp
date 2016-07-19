@@ -126,7 +126,7 @@ class Player(object):
         self.window.set_title(self.trackinfo.totitle(s))
 
 
-    def key_press(self, widget, event, data=None):
+    def key_press(self, _, event, _):
         #Only exit if window is closed or Escape key is pressed
         if event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "space":
             self.skip()
@@ -267,7 +267,7 @@ class Player(object):
         self.player.set_state(STATE_NULL)
 
 
-    def on_message(self, bus, message):
+    def on_message(self, _, message):
         t = message.type
 
         if t == MESSAGE_EOS: # End Of Stream
@@ -292,7 +292,6 @@ class Player(object):
 
         elif t == MESSAGE_TAG:
             taglist = message.parse_tag()
-            keys = taglist.keys()
             if "title" in taglist:
                 self.trackinfo.title = taglist["title"]
                 if "artist" in taglist:

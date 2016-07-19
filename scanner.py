@@ -99,7 +99,7 @@ class Scanner(object):
             gtk.main_quit()
 
 
-    def on_message(self, bus, message):
+    def on_message(self, _, message):
         # We don't know what order these come in,
         # so we need to deal with them as they come
         # and skip when we've got everything we need
@@ -139,7 +139,7 @@ class Scanner(object):
 
 
 if __name__ == "__main__":
-    logger = logging.basicConfig(
+    logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s L%(lineno)03d %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
