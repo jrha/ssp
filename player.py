@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(description='Super Simple Player')
 parser.add_argument('--passive', action='store_true', help="Don't update track statistics.")
 parser.add_argument('--albums', action='store_true', help="Album mode, randomly select an album to play rather than a track.")
 parser.add_argument('--debug', action='store_true', help="Enable debug logging.")
+parser.add_argument('--fullscreen', action='store_true', help="Start player fullscreen.")
 args = parser.parse_args()
 del parser
 
@@ -75,7 +76,7 @@ class TrackInfo(object):
 
 class Player(object):
 
-    def __init__(self, passive=False, album_mode=False):
+    def __init__(self, passive=False, album_mode=False, fullscreen=False):
         self.logger = logging.getLogger("ssp")
         self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s", passive, album_mode, SCHEMA_VERSION)
 
@@ -98,12 +99,17 @@ class Player(object):
 
         self.label = gtk.Label()
 
-        self.label.modify_font(pango.FontDescription("Sans 32"))
+        font_size = self.window.get_screen().get_monitor_geometry(0).width / 40
+
+        self.label.modify_font(pango.FontDescription("Sans %d" % font_size))
         self.label.set_alignment(0.5, 0.5)
         self.label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#eeeeec"))
         self.label.set_line_wrap(True)
 
         self.window.add(self.label)
+
+        if fullscreen:
+            self.window.fullscreen()
 
         self.window.show_all()
 
@@ -311,7 +317,7 @@ if __name__ == "__main__":
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    p = Player(args.passive, args.albums)
+    p = Player(args.passive, args.albums, args.fullscreen)
 
     restore = p.state_restore()
     if restore:
