@@ -126,7 +126,7 @@ class Player(object):
             s += " [Exit After Current]"
         self.window.set_title(self.trackinfo.totitle(s))
 
-    def key_press(self, _, event, _):
+    def key_press(self, _, event):
         #Only exit if window is closed or Escape key is pressed
         if event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "space":
             self.skip()
