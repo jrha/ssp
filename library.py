@@ -64,7 +64,7 @@ class sspTrack(Base):
 
 class sspStat(Base):
     __tablename__ = 'stats'
-    hour = Column(Integer(24), primary_key=True)
+    hour = Column(Integer(), primary_key=True)
     playcount = Column(Integer())
     skipcount = Column(Integer())
 
@@ -80,8 +80,8 @@ class sspStat(Base):
 
 class sspWeekStat(Base):
     __tablename__ = 'weekstats'
-    hour = Column(Integer(24), primary_key=True)
-    day = Column(Integer(7), primary_key=True)
+    hour = Column(Integer(), primary_key=True)
+    day = Column(Integer(), primary_key=True)
     playcount = Column(Integer())
     skipcount = Column(Integer())
 
