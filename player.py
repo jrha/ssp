@@ -173,10 +173,13 @@ class Player(object):
         json.dump(d, f)
 
     def state_restore(self):
-        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'r')
         try:
-            d = json.load(f)
-        except ValueError:
+            f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'r')
+            try:
+                d = json.load(f)
+            except ValueError:
+                d = {}
+        except IOError:
             d = {}
         self.logger.info("Restored State: %s", d)
         return(d)
