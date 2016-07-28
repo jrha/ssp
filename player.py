@@ -94,15 +94,12 @@ class Player(object):
         self.window.connect("destroy", gtk.main_quit, "WM destroy")
         self.window.connect("delete_event", self.key_press)
         self.window.connect("key_press_event", self.key_press)
+        self.window.connect("realize", self.realize_window)
 
         self.window.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#000"))
 
         self.label = gtk.Label()
 
-        font_size = self.window.get_screen().get_monitor_geometry(0).width / 40
-
-        self.label.modify_font(pango.FontDescription("Sans %d" % font_size))
-        self.label.set_alignment(0.5, 0.5)
         self.label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#eeeeec"))
         self.label.set_line_wrap(True)
 
@@ -123,6 +120,18 @@ class Player(object):
 
         pynotify.init("SSP")
         self.notification = pynotify.Notification("SSP")
+
+    def realize_window(self, widget):
+        # Blank Cursor
+        pixmap = gtk.gdk.Pixmap(None, 1, 1, 1)
+        color = gtk.gdk.Color()
+        cursor = gtk.gdk.Cursor(pixmap, pixmap, color, color, 0, 0)
+        widget.window.set_cursor(cursor)
+
+        # Scale Font
+        font_size = self.window.get_screen().get_monitor_geometry(0).width / 40
+        self.label.modify_font(pango.FontDescription("Sans %d" % font_size))
+        self.label.set_alignment(0.5, 0.5)
 
     def updateTitle(self):
         s = ""
@@ -185,6 +194,7 @@ class Player(object):
         return(d)
 
     def select_random(self, min_play_count, min_skip_count):
+
         self.logger.debug("Selecting track based on standard algorithm")
         track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
         return track
