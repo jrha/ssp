@@ -41,6 +41,7 @@ class sspTrack(Base):
     lastplayed = Column(DateTime())
     albumid = Column(String(48))
     trackid = Column(String(48))
+    lastscanned = Column(DateTime())
 
     def __init__(self, filepath):
         self.filepath = filepath
@@ -49,14 +50,21 @@ class sspTrack(Base):
         self.lastplayed = None
         self.albumid = ""
         self.trackid = ""
+        self.lastscanned = None
 
     def __repr__(self):
-        return "<Track (%s - %s plays, %s skips, last played %s)>" % (self.filepath, self.playcount, self.skipcount, self.lastplayed)
+        return "<Track (%s - %s plays, %s skips, last played %s, last scanned %s)>" % (
+            self.filepath,
+            self.playcount,
+            self.skipcount,
+            self.lastplayed,
+            self.lastscanned,
+        )
 
 
 class sspStat(Base):
     __tablename__ = 'stats'
-    hour = Column(Integer(24), primary_key=True)
+    hour = Column(Integer(), primary_key=True)
     playcount = Column(Integer())
     skipcount = Column(Integer())
 
@@ -72,8 +80,8 @@ class sspStat(Base):
 
 class sspWeekStat(Base):
     __tablename__ = 'weekstats'
-    hour = Column(Integer(24), primary_key=True)
-    day = Column(Integer(7), primary_key=True)
+    hour = Column(Integer(), primary_key=True)
+    day = Column(Integer(), primary_key=True)
     playcount = Column(Integer())
     skipcount = Column(Integer())
 
@@ -85,7 +93,12 @@ class sspWeekStat(Base):
             self.skipcount = 0
 
     def __repr__(self):
-        return "<WeekStat (Hour %s, Day %s - %s plays, %s skips)>" % (self.hour, self.day, self.playcount, self.skipcount)
+        return "<WeekStat (Hour %s, Day %s - %s plays, %s skips)>" % (
+            self.hour,
+            self.day,
+            self.playcount,
+            self.skipcount,
+        )
 
 
 def connect():

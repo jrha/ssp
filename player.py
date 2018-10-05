@@ -26,11 +26,13 @@ parser = argparse.ArgumentParser(description='Super Simple Player')
 parser.add_argument('--passive', action='store_true', help="Don't update track statistics.")
 parser.add_argument('--albums', action='store_true', help="Album mode, randomly select an album to play rather than a track.")
 parser.add_argument('--debug', action='store_true', help="Enable debug logging.")
+parser.add_argument('--fullscreen', action='store_true', help="Start player fullscreen.")
 args = parser.parse_args()
 del parser
 
-import sys, os
-import pygtk, gtk, gobject
+import sys
+import os
+import gtk
 import pygst
 pygst.require("0.10")
 import pango
@@ -45,7 +47,8 @@ from utfurl import fixurl
 
 from library import *
 
-class TrackInfo:
+
+class TrackInfo(object):
     def __init__(self):
         self.title = ""
         self.artist = ""
@@ -58,7 +61,7 @@ class TrackInfo:
             s += " (%s)" % (self.year)
         return s
 
-    def totitle(self, extras = ""):
+    def totitle(self, extras=""):
         s = "SSP : %s - %s - %s" % (self.title, self.artist, self.album)
         if self.year:
             s += " (%s)" % (self.year)
@@ -71,11 +74,11 @@ class TrackInfo:
         return (self.title, s)
 
 
-class Player:
+class Player(object):
 
-    def __init__(self, passive=False, album_mode=False):
+    def __init__(self, passive=False, album_mode=False, fullscreen=False):
         self.logger = logging.getLogger("ssp")
-        self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s" % (passive, album_mode, SCHEMA_VERSION))
+        self.logger.info("Startup, passive mode %s, album mode %s, library schema v%s", passive, album_mode, SCHEMA_VERSION)
 
         self.passive = passive
         self.album_mode = album_mode
@@ -91,17 +94,19 @@ class Player:
         self.window.connect("destroy", gtk.main_quit, "WM destroy")
         self.window.connect("delete_event", self.key_press)
         self.window.connect("key_press_event", self.key_press)
+        self.window.connect("realize", self.realize_window)
 
         self.window.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#000"))
 
         self.label = gtk.Label()
 
-        self.label.modify_font(pango.FontDescription("Sans 32"))
-        self.label.set_alignment(0.5, 0.5)
         self.label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#eeeeec"))
         self.label.set_line_wrap(True)
 
         self.window.add(self.label)
+
+        if fullscreen:
+            self.window.fullscreen()
 
         self.window.show_all()
 
@@ -116,6 +121,17 @@ class Player:
         pynotify.init("SSP")
         self.notification = pynotify.Notification("SSP")
 
+    def realize_window(self, widget):
+        # Blank Cursor
+        pixmap = gtk.gdk.Pixmap(None, 1, 1, 1)
+        color = gtk.gdk.Color()
+        cursor = gtk.gdk.Cursor(pixmap, pixmap, color, color, 0, 0)
+        widget.window.set_cursor(cursor)
+
+        # Scale Font
+        font_size = self.window.get_screen().get_monitor_geometry(0).width / 40
+        self.label.modify_font(pango.FontDescription("Sans %d" % font_size))
+        self.label.set_alignment(0.5, 0.5)
 
     def updateTitle(self):
         s = ""
@@ -125,15 +141,14 @@ class Player:
             s += " [Exit After Current]"
         self.window.set_title(self.trackinfo.totitle(s))
 
-
-    def key_press(self, widget, event, data=None):
+    def key_press(self, _, event):
         #Only exit if window is closed or Escape key is pressed
         if event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "space":
             self.skip()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "a":
             self.album_mode = not self.album_mode
-            self.logger.debug("Changed album mode to %s" % (self.album_mode))
+            self.logger.debug("Changed album mode to %s", self.album_mode)
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "p":
@@ -141,7 +156,7 @@ class Player:
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) == "e":
             self.exit_after_current = not self.exit_after_current
-            self.logger.debug("Changed exit after current to %s" % (self.exit_after_current))
+            self.logger.debug("Changed exit after current to %s", self.exit_after_current)
             self.updateTitle()
             return True
         elif event.type == gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval) != "Escape":
@@ -156,26 +171,30 @@ class Player:
         if not blank:
             try:
                 d = {
-                    'trackid' : self.track.trackid,
-                    'album_mode' : self.album_mode,
+                    'trackid': self.track.trackid,
+                    'album_mode': self.album_mode,
                 }
             except AttributeError:
                 d = {}
         else:
             d = {}
-        self.logger.info("Saved State: %s" % d)
+        self.logger.info("Saved State: %s", d)
         json.dump(d, f)
 
     def state_restore(self):
-        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'r')
         try:
-            d = json.load(f)
-        except ValueError:
+            f = open(os.path.join(os.path.dirname(sys.argv[0]), 'state.json'), 'r')
+            try:
+                d = json.load(f)
+            except ValueError:
+                d = {}
+        except IOError:
             d = {}
-        self.logger.info("Restored State: %s" % d)
+        self.logger.info("Restored State: %s", d)
         return(d)
 
     def select_random(self, min_play_count, min_skip_count):
+
         self.logger.debug("Selecting track based on standard algorithm")
         track = random.choice(self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).all())
         return track
@@ -187,14 +206,14 @@ class Player:
 
     def select_album(self, min_play_count, min_skip_count, album):
         self.logger.debug("Selecting track based on album mode algorithm")
-        self.logger.debug("min_play_count: %s" % (min_play_count))
-        self.logger.debug("min_skip_count: %s" % (min_skip_count))
+        self.logger.debug("min_play_count: %s", min_play_count)
+        self.logger.debug("min_skip_count: %s", min_skip_count)
         remaining_album_tracks = self.library.query(sspTrack).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).count()
-        self.logger.debug("remaining_album_tracks: %s" % (remaining_album_tracks))
+        self.logger.debug("remaining_album_tracks: %s", remaining_album_tracks)
         if remaining_album_tracks == 0:
             self.logger.debug("No tracks left to play, selecting new album")
             album = self.library.query(sspTrack.albumid).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).order_by(sspTrack.playcount + sspTrack.skipcount, "random()").first()[0]
-        self.logger.debug("Album ID: %s" % (album))
+        self.logger.debug("Album ID: %s", album)
         track = self.library.query(sspTrack).filter(sspTrack.albumid == album).filter(sspTrack.playcount == min_play_count).filter(sspTrack.skipcount == min_skip_count).filter(sspTrack.albumid == album).order_by(sspTrack.filepath).first()
         if track.skipcount > min_skip_count or track.playcount > min_play_count or track.albumid != album:
             self.logger.error("Algorithm failure, selected track doesn't meet selection conditions. This is a bug, report this!")
@@ -218,10 +237,9 @@ class Player:
             # Try to find track based on trackid
             self.track = self.select_track(trackid)
 
-        self.album = self.track.albumid # Set this so we can continue with an album
+        self.album = self.track.albumid  # Set this so we can continue with an album
 
-
-        self.logger.debug("Selected track %s" % (self.track))
+        self.logger.debug("Selected track %s", self.track)
 
         self.stat = self.library.query(sspStat).filter("hour = %s" % datetime.now().hour).first()
         if not self.stat:
@@ -236,14 +254,13 @@ class Player:
         self.trackinfo = TrackInfo()
 
         if os.path.isfile(self.track.filepath):
-            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#","%23")))
+            self.player.set_property("uri", u"file://" + fixurl(self.track.filepath.replace("#", "%23")))
             self.state_save()
             self.player.set_state(STATE_PLAYING)
         else:
-            self.logger.info("Oops, \"%s\" doesn't seem to exist anymore" % self.track.filepath)
+            self.logger.info("Oops, \"%s\" doesn't seem to exist anymore", self.track.filepath)
             self.stop()
             self.play()
-
 
     def skip(self):
         self.stop()
@@ -253,24 +270,21 @@ class Player:
             self.stat.skipcount += 1
             self.weekstat.skipcount += 1
             self.library.commit()
-            self.logger.debug("Updated stats on skip %s" % (self.track))
+            self.logger.debug("Updated stats on skip %s", self.track)
         self.play()
 
-
     def flag_problem(self):
-        self.logger.info("PROBLEM flagged with %s" % (self.track))
+        self.logger.info("PROBLEM flagged with %s", self.track)
         self.skip()
-
 
     def stop(self):
         self.state_save(True)
         self.player.set_state(STATE_NULL)
 
-
-    def on_message(self, bus, message):
+    def on_message(self, _, message):
         t = message.type
 
-        if t == MESSAGE_EOS: # End Of Stream
+        if t == MESSAGE_EOS:  # End Of Stream
             self.stop()
             if self.exit_after_current:
                 gtk.main_quit()
@@ -282,17 +296,16 @@ class Player:
                 self.weekstat.playcount += 1
                 self.track.lastplayed = datetime.now()
                 self.library.commit()
-                self.logger.debug("Updated stats on play completion %s" % (self.track))
+                self.logger.debug("Updated stats on play completion %s", self.track)
             self.play()
 
-        elif t == MESSAGE_ERROR: # Eeek!
+        elif t == MESSAGE_ERROR:  # Eeek!
             self.stop()
             err, debug = message.parse_error()
-            self.logger.error("MESSAGE_ERROR: %s" % err, debug)
+            self.logger.error("MESSAGE_ERROR: %s", err, debug)
 
         elif t == MESSAGE_TAG:
             taglist = message.parse_tag()
-            keys = taglist.keys()
             if "title" in taglist:
                 self.trackinfo.title = taglist["title"]
                 if "artist" in taglist:
@@ -306,7 +319,6 @@ class Player:
                 self.updateTitle()
                 self.notify(self.trackinfo.tonotification())
 
-
     def notify(self, message):
         self.notification.update(message[0], message[1], "media-skip-forward")
         self.notification.show()
@@ -318,7 +330,7 @@ if __name__ == "__main__":
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    p = Player(args.passive, args.albums)
+    p = Player(args.passive, args.albums, args.fullscreen)
 
     restore = p.state_restore()
     if restore:
